@@ -11,6 +11,7 @@ export const SALAWAT_ABI = parseAbi([
   "function dailyMinted(address) view returns (uint256)",
   "function allowance(address owner, address spender) view returns (uint256)",
   "function approve(address spender, uint256 amount) returns (bool)",
+  "function logSalawat(address user, uint256 count) external",
 ]);
 
 export const REDEMPTION_ABI = parseAbi([
