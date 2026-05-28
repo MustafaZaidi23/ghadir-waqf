@@ -323,8 +323,8 @@ bot.callbackQuery(/^charity:(.+)$/, async (ctx) => {
       `Country: ${c.country ?? "—"}\n` +
       `Funded: ${funded}${target}\n` +
       `Wallet: ${c.wallet_address}\n\n` +
-      `⚠️ On-chain redemption requires signing from your wallet.\n` +
-      `The Ghadir web app (coming soon) will complete this step.`
+      `To complete the donation, open the Ghadir web app:\n` +
+      `👉 https://ghadir-waqf.vercel.app/redeem`
   );
 });
 
