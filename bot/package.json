@@ -6,6 +6,9 @@
     "start": "tsx index.ts",
     "dev": "tsx --watch index.ts"
   },
+  "engines": {
+    "node": ">=20"
+  },
   "dependencies": {
     "@supabase/supabase-js": "^2.106.2",
     "dotenv": "^17.4.2",
