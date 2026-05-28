@@ -4,6 +4,8 @@ import { usePathname } from "next/navigation";
 import { usePrivy } from "@privy-io/react-auth";
 import { useAccount } from "wagmi";
 
+const ADMIN = process.env.NEXT_PUBLIC_ADMIN_ADDRESS?.toLowerCase();
+
 const links = [
   { href: "/",             label: "Home" },
   { href: "/dashboard",   label: "Dashboard" },
@@ -40,6 +42,23 @@ function WalletButton() {
   );
 }
 
+function AdminLink({ path }: { path: string }) {
+  const { address } = useAccount();
+  if (!ADMIN || address?.toLowerCase() !== ADMIN) return null;
+  return (
+    <Link
+      href="/admin"
+      className={`text-sm transition-colors ${
+        path === "/admin"
+          ? "text-[#f59e0b] font-semibold"
+          : "text-[#6b9e6b] hover:text-[#f59e0b]"
+      }`}
+    >
+      Admin
+    </Link>
+  );
+}
+
 export function Nav() {
   const path = usePathname();
   return (
@@ -63,6 +82,7 @@ export function Nav() {
                 {l.label}
               </Link>
             ))}
+            <AdminLink path={path} />
           </div>
         </div>
         <WalletButton />
