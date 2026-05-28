@@ -1,6 +1,6 @@
 "use client";
 import { useAccount, useReadContract } from "wagmi";
-import { ConnectButton } from "@rainbow-me/rainbowkit";
+import { usePrivy } from "@privy-io/react-auth";
 import { formatUnits } from "viem";
 import { SALAWAT_TOKEN, SALAWAT_ABI, EXPLORER } from "@/lib/contracts";
 import { useEffect, useState } from "react";
@@ -17,6 +17,7 @@ interface SalawatLog {
 
 export default function Dashboard() {
   const { address, isConnected } = useAccount();
+  const { login } = usePrivy();
   const [logs, setLogs] = useState<SalawatLog[]>([]);
   const [loading, setLoading] = useState(false);
 
@@ -64,9 +65,9 @@ export default function Dashboard() {
     return (
       <div className="flex flex-col items-center justify-center gap-6 py-24 text-center">
         <div className="text-5xl">🔗</div>
-        <h2 className="text-2xl font-bold text-[#e8f5e8]">Connect your wallet</h2>
-        <p className="text-[#6b9e6b]">Connect your Celo wallet to view your dashboard.</p>
-        <ConnectButton />
+        <h2 className="text-2xl font-bold text-[#e8f5e8]">Sign in to view your dashboard</h2>
+        <p className="text-[#6b9e6b]">Use email, Google, or your Celo wallet — no seed phrase needed.</p>
+        <button onClick={login} className="btn-primary px-6 py-2">Sign In</button>
       </div>
     );
   }

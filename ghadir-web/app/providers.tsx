@@ -1,26 +1,33 @@
 "use client";
-import { RainbowKitProvider, darkTheme } from "@rainbow-me/rainbowkit";
-import { WagmiProvider } from "wagmi";
+import { PrivyProvider } from "@privy-io/react-auth";
+import { WagmiProvider } from "@privy-io/wagmi";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { wagmiConfig } from "@/lib/wagmiConfig";
-import "@rainbow-me/rainbowkit/styles.css";
+import { celoSepolia } from "@/lib/chain";
 
 const queryClient = new QueryClient();
 
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
-    <WagmiProvider config={wagmiConfig}>
+    <PrivyProvider
+      appId={process.env.NEXT_PUBLIC_PRIVY_APP_ID!}
+      config={{
+        defaultChain: celoSepolia,
+        supportedChains: [celoSepolia],
+        appearance: {
+          theme: "dark",
+          accentColor: "#22c55e",
+        },
+        embeddedWallets: {
+          ethereum: { createOnLogin: "users-without-wallets" },
+        },
+      }}
+    >
       <QueryClientProvider client={queryClient}>
-        <RainbowKitProvider
-          theme={darkTheme({
-            accentColor: "#16a34a",
-            accentColorForeground: "white",
-            borderRadius: "medium",
-          })}
-        >
+        <WagmiProvider config={wagmiConfig}>
           {children}
-        </RainbowKitProvider>
+        </WagmiProvider>
       </QueryClientProvider>
-    </WagmiProvider>
+    </PrivyProvider>
   );
 }

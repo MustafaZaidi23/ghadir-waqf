@@ -1,10 +1,10 @@
-"use client";
-import { getDefaultConfig } from "@rainbow-me/rainbowkit";
+import { createConfig } from "@privy-io/wagmi";
+import { http } from "wagmi";
 import { celoSepolia } from "./chain";
 
-export const wagmiConfig = getDefaultConfig({
-  appName: "Ghadir Waqf",
-  projectId: process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID ?? "placeholder",
+export const wagmiConfig = createConfig({
   chains: [celoSepolia],
-  ssr: true,
+  transports: {
+    [celoSepolia.id]: http(),
+  },
 });

@@ -1,6 +1,6 @@
 "use client";
 import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt } from "wagmi";
-import { ConnectButton } from "@rainbow-me/rainbowkit";
+import { usePrivy } from "@privy-io/react-auth";
 import { formatUnits, parseUnits } from "viem";
 import { SALAWAT_TOKEN, SADAQAH_REDEMPTION, SALAWAT_ABI, REDEMPTION_ABI, EXPLORER } from "@/lib/contracts";
 import { useState, useEffect } from "react";
@@ -20,6 +20,7 @@ interface Charity {
 
 export default function Redeem() {
   const { address, isConnected } = useAccount();
+  const { login } = usePrivy();
   const [charities, setCharities] = useState<Charity[]>([]);
   const [selected, setSelected] = useState<Charity | null>(null);
   const [amount, setAmount] = useState("");
@@ -61,9 +62,9 @@ export default function Redeem() {
     return (
       <div className="flex flex-col items-center justify-center gap-6 py-24 text-center">
         <div className="text-5xl">💚</div>
-        <h2 className="text-2xl font-bold text-[#e8f5e8]">Connect your wallet</h2>
-        <p className="text-[#6b9e6b]">Connect to redeem GHDR as sadaqah.</p>
-        <ConnectButton />
+        <h2 className="text-2xl font-bold text-[#e8f5e8]">Sign in to redeem sadaqah</h2>
+        <p className="text-[#6b9e6b]">Use email, Google, or your Celo wallet — no seed phrase needed.</p>
+        <button onClick={login} className="btn-primary px-6 py-2">Sign In</button>
       </div>
     );
   }

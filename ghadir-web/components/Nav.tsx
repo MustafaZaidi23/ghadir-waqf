@@ -1,14 +1,44 @@
 "use client";
-import { ConnectButton } from "@rainbow-me/rainbowkit";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { usePrivy } from "@privy-io/react-auth";
+import { useAccount } from "wagmi";
 
 const links = [
-  { href: "/",            label: "Home" },
-  { href: "/dashboard",  label: "Dashboard" },
-  { href: "/redeem",     label: "Redeem" },
-  { href: "/leaderboard",label: "Leaderboard" },
+  { href: "/",             label: "Home" },
+  { href: "/dashboard",   label: "Dashboard" },
+  { href: "/redeem",      label: "Redeem" },
+  { href: "/leaderboard", label: "Leaderboard" },
 ];
+
+function WalletButton() {
+  const { login, logout, authenticated, ready } = usePrivy();
+  const { address } = useAccount();
+
+  if (!ready) return <div className="w-24 h-8 bg-[#1e3a1e] rounded-lg animate-pulse" />;
+
+  if (authenticated && address) {
+    return (
+      <div className="flex items-center gap-2">
+        <span className="text-[#6b9e6b] text-xs font-mono hidden sm:block">
+          {address.slice(0, 6)}…{address.slice(-4)}
+        </span>
+        <button
+          onClick={logout}
+          className="text-xs border border-[#1e3a1e] text-[#6b9e6b] hover:text-[#f87171] rounded-lg px-3 py-1.5 transition-colors"
+        >
+          Disconnect
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <button onClick={login} className="btn-primary text-sm px-4 py-1.5">
+      Sign In
+    </button>
+  );
+}
 
 export function Nav() {
   const path = usePathname();
@@ -35,7 +65,7 @@ export function Nav() {
             ))}
           </div>
         </div>
-        <ConnectButton chainStatus="icon" showBalance={false} />
+        <WalletButton />
       </div>
     </nav>
   );
