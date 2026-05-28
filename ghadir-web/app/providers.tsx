@@ -4,8 +4,21 @@ import { WagmiProvider } from "@privy-io/wagmi";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { wagmiConfig } from "@/lib/wagmiConfig";
 import { celoSepolia } from "@/lib/chain";
+import { useEffect } from "react";
+import { getTelegramWebApp } from "@/lib/telegram";
 
 const queryClient = new QueryClient();
+
+function TelegramInit() {
+  useEffect(() => {
+    const twa = getTelegramWebApp();
+    if (twa) {
+      twa.ready();
+      twa.expand();
+    }
+  }, []);
+  return null;
+}
 
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
@@ -25,6 +38,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
     >
       <QueryClientProvider client={queryClient}>
         <WagmiProvider config={wagmiConfig}>
+          <TelegramInit />
           {children}
         </WagmiProvider>
       </QueryClientProvider>

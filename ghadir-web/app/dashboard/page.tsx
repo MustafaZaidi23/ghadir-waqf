@@ -4,6 +4,7 @@ import { usePrivy } from "@privy-io/react-auth";
 import { formatUnits } from "viem";
 import { SALAWAT_TOKEN, SALAWAT_ABI, EXPLORER } from "@/lib/contracts";
 import { useEffect, useState } from "react";
+import { getTelegramUser, getTelegramWebApp, isInTelegram } from "@/lib/telegram";
 
 interface SalawatLog {
   id: string;
@@ -20,6 +21,10 @@ export default function Dashboard() {
   const { login } = usePrivy();
   const [logs, setLogs] = useState<SalawatLog[]>([]);
   const [loading, setLoading] = useState(false);
+  const [linkStatus, setLinkStatus] = useState<"idle" | "linking" | "linked" | "error">("idle");
+
+  const tgUser = getTelegramUser();
+  const inTelegram = isInTelegram();
 
   const { data: balance } = useReadContract({
     address: SALAWAT_TOKEN,
@@ -61,11 +66,29 @@ export default function Dashboard() {
       .finally(() => setLoading(false));
   }, [address]);
 
+  // Auto-link wallet to Telegram account when both are available
+  useEffect(() => {
+    if (!inTelegram || !address || linkStatus !== "idle") return;
+    const twa = getTelegramWebApp();
+    if (!twa?.initData) return;
+
+    setLinkStatus("linking");
+    fetch("/api/link-wallet", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ initData: twa.initData, wallet_address: address }),
+    })
+      .then((r) => (r.ok ? setLinkStatus("linked") : setLinkStatus("error")))
+      .catch(() => setLinkStatus("error"));
+  }, [address, inTelegram, linkStatus]);
+
   if (!isConnected) {
     return (
       <div className="flex flex-col items-center justify-center gap-6 py-24 text-center">
         <div className="text-5xl">🔗</div>
-        <h2 className="text-2xl font-bold text-[#e8f5e8]">Sign in to view your dashboard</h2>
+        <h2 className="text-2xl font-bold text-[#e8f5e8]">
+          {tgUser ? `Marhaba, ${tgUser.first_name}` : "Sign in to view your dashboard"}
+        </h2>
         <p className="text-[#6b9e6b]">Use email, Google, or your Celo wallet — no seed phrase needed.</p>
         <button onClick={login} className="btn-primary px-6 py-2">Sign In</button>
       </div>
@@ -80,7 +103,18 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-8">
-      <h1 className="text-2xl font-bold text-[#e8f5e8]">Dashboard</h1>
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-bold text-[#e8f5e8]">Dashboard</h1>
+        {tgUser && (
+          <div className="flex items-center gap-2 text-sm text-[#6b9e6b]">
+            <span>✈️</span>
+            <span>{tgUser.first_name}{tgUser.username ? ` @${tgUser.username}` : ""}</span>
+            {linkStatus === "linked" && (
+              <span className="text-xs text-[#22c55e] bg-[#14532d] px-2 py-0.5 rounded-full">linked</span>
+            )}
+          </div>
+        )}
+      </div>
 
       {/* Stats row */}
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
@@ -127,13 +161,9 @@ export default function Dashboard() {
                 className="flex items-center justify-between py-2 border-b border-[#1e3a1e] last:border-0"
               >
                 <div>
-                  <span className="text-[#e8f5e8] text-sm">
-                    +{log.tokens_earned} GHDR
-                  </span>
+                  <span className="text-[#e8f5e8] text-sm">+{log.tokens_earned} GHDR</span>
                   {log.multiplier > 1 && (
-                    <span className="ml-2 text-xs text-[#f59e0b]">
-                      {log.multiplier}x
-                    </span>
+                    <span className="ml-2 text-xs text-[#f59e0b]">{log.multiplier}x</span>
                   )}
                   <div className="text-[#6b9e6b] text-xs mt-0.5">
                     {new Date(log.created_at).toLocaleDateString("en-GB", {

@@ -78,6 +78,7 @@ async function getOrCreateUser(
 }
 
 // ─── Bot ──────────────────────────────────────────────────────────────────────
+const APP_URL = "https://ghadir-waqf.vercel.app";
 const bot = new Bot(process.env.TELEGRAM_BOT_TOKEN!);
 
 // /start ──────────────────────────────────────────────────────────────────────
@@ -86,17 +87,35 @@ bot.command("start", async (ctx) => {
   await getOrCreateUser(String(from.id), from.username, from.first_name);
 
   const name = from.first_name || from.username || "friend";
+  const keyboard = new InlineKeyboard()
+    .webApp("🌐 Open App", APP_URL)
+    .row()
+    .text("📖 How it works", "howto");
+
   await ctx.reply(
     `Assalamu Alaikum, ${name} 🌙\n\n` +
       `Welcome to Ghadir Waqf — the first permanent Islamic digital Waqf on Celo blockchain.\n\n` +
       `Every Salawat you send earns $GHDR tokens.\n` +
       `Redeem them as sadaqah — verified, on-chain, permanent.\n\n` +
       `Commands:\n` +
-      `/wallet <address> — link your Celo wallet\n` +
       `/salawat — log a Salawat (earns 10 GHDR)\n` +
       `/balance — check your GHDR balance\n` +
-      `/redeem — donate GHDR as sadaqah\n\n` +
-      `Start by linking your wallet:\n/wallet 0xYourCeloAddress`
+      `/redeem — donate GHDR as sadaqah\n` +
+      `/wallet <address> — link your Celo wallet manually`,
+    { reply_markup: keyboard }
+  );
+});
+
+bot.callbackQuery("howto", async (ctx) => {
+  await ctx.answerCallbackQuery();
+  await ctx.reply(
+    `How Ghadir Waqf works:\n\n` +
+      `1️⃣ Open the app and sign in (email, Google, or wallet)\n` +
+      `2️⃣ Your Celo wallet is created automatically — no seed phrase\n` +
+      `3️⃣ Send /salawat here to earn 10 GHDR tokens per Salawat\n` +
+      `4️⃣ Go to Redeem, pick a verified charity, burn GHDR → donate USDC\n\n` +
+      `The donation is on-chain, permanent, and goes directly to the charity's wallet.`,
+    { reply_markup: new InlineKeyboard().webApp("🌐 Open App", APP_URL) }
   );
 });
 
@@ -321,10 +340,14 @@ bot.callbackQuery(/^charity:(.+)$/, async (ctx) => {
       `${c.description ?? ""}\n\n` +
       `Category: ${c.cause_category ?? "—"}\n` +
       `Country: ${c.country ?? "—"}\n` +
-      `Funded: ${funded}${target}\n` +
-      `Wallet: ${c.wallet_address}\n\n` +
-      `To complete the donation, open the Ghadir web app:\n` +
-      `👉 https://ghadir-waqf.vercel.app/redeem`
+      `Funded: ${funded}${target}\n\n` +
+      `Tap below to complete the donation in the app:`,
+    {
+      reply_markup: new InlineKeyboard().webApp(
+        `💚 Donate to ${c.name}`,
+        `${APP_URL}/redeem`
+      ),
+    }
   );
 });
 
@@ -348,5 +371,15 @@ createServer((_, res) => { res.writeHead(200); res.end("OK"); }).listen(PORT);
 
 // ─── Start ────────────────────────────────────────────────────────────────────
 await bot.api.deleteWebhook();
+
+// Set persistent "Open App" button in the chat menu
+await bot.api.setChatMenuButton({
+  menu_button: {
+    type: "web_app",
+    text: "Open App",
+    web_app: { url: APP_URL },
+  },
+});
+
 bot.start();
 console.log(`Ghadir Waqf bot running — agent: ${agentAccount.address}`);
