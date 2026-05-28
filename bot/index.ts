@@ -333,6 +333,20 @@ bot.catch((err) => {
   console.error("Bot error:", err.message);
 });
 
+// ─── Process-level crash guards ───────────────────────────────────────────────
+process.on("unhandledRejection", (reason) => {
+  console.error("Unhandled rejection:", reason);
+});
+process.on("uncaughtException", (err) => {
+  console.error("Uncaught exception:", err);
+});
+
+// ─── Health server (Railway requires PORT binding) ────────────────────────────
+import { createServer } from "http";
+const PORT = process.env.PORT ?? 3000;
+createServer((_, res) => { res.writeHead(200); res.end("OK"); }).listen(PORT);
+
 // ─── Start ────────────────────────────────────────────────────────────────────
+await bot.api.deleteWebhook();
 bot.start();
 console.log(`Ghadir Waqf bot running — agent: ${agentAccount.address}`);
