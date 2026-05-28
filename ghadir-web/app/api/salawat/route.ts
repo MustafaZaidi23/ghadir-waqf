@@ -78,6 +78,8 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Provide init_data or wallet_address" }, { status: 400 });
   }
 
+  const count = Math.max(1, Math.min(Number(body.count ?? 1), 1000)); // clamp 1–1000
+
   // Check daily cap
   const [dailyMinted, dailyCap, multiplierBN] = await Promise.all([
     publicClient.readContract({ address: SALAWAT_TOKEN, abi: AGENT_ABI, functionName: "dailyMinted", args: [walletAddress as `0x${string}`] }),
@@ -85,7 +87,10 @@ export async function POST(req: NextRequest) {
     publicClient.readContract({ address: SALAWAT_TOKEN, abi: AGENT_ABI, functionName: "multiplier" }),
   ]);
 
-  if (BigInt(String(dailyMinted)) >= BigInt(String(dailyCap))) {
+  const minted = BigInt(String(dailyMinted));
+  const cap = BigInt(String(dailyCap));
+
+  if (minted >= cap) {
     return NextResponse.json({ error: "Daily cap reached. Come back tomorrow." }, { status: 429 });
   }
 
@@ -98,7 +103,7 @@ export async function POST(req: NextRequest) {
 
   const { data: log } = await supabase
     .from("salawat_logs")
-    .insert({ user_id: dbUser?.id ?? null, count: 1, tokens_earned: 0, multiplier: 1, status: "pending" })
+    .insert({ user_id: dbUser?.id ?? null, count, tokens_earned: 0, multiplier: 1, status: "pending" })
     .select()
     .single();
 
@@ -109,13 +114,13 @@ export async function POST(req: NextRequest) {
       address: SALAWAT_TOKEN,
       abi: AGENT_ABI,
       functionName: "logSalawat",
-      args: [walletAddress as `0x${string}`, 1n],
+      args: [walletAddress as `0x${string}`, BigInt(count)],
     });
 
     await publicClient.waitForTransactionReceipt({ hash: txHash });
 
     const multiplierVal = Number(multiplierBN);
-    const tokensEarned = (10 * multiplierVal) / 100;
+    const tokensEarned = (10 * count * multiplierVal) / 100;
 
     if (log) {
       await supabase
@@ -124,7 +129,7 @@ export async function POST(req: NextRequest) {
         .eq("id", log.id);
     }
 
-    return NextResponse.json({ tx_hash: txHash, tokens_earned: tokensEarned, multiplier: multiplierVal / 100 });
+    return NextResponse.json({ tx_hash: txHash, tokens_earned: tokensEarned, multiplier: multiplierVal / 100, count });
   } catch (err: unknown) {
     const msg = String((err as { shortMessage?: string; message?: string })?.shortMessage ?? (err as { message?: string })?.message ?? err).slice(0, 300);
     if (log) {
