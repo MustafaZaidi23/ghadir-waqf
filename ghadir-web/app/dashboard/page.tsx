@@ -186,29 +186,74 @@ export default function Dashboard() {
             </Link>
           </div>
         ) : (
-          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-            {myCampaigns.map(c => {
-              const color = TYPE_COLOR[c.type] ?? "#94a3b8";
-              const cta   = CTA_LABEL[c.type] ?? { href: "/", label: "Participate" };
-              const done  = c.status === "completed";
-              return (
-                <div key={c.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, padding: "10px 12px", background: "#0a0f0a", borderRadius: 10, border: `1px solid ${color}20` }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
-                    <div style={{ width: 8, height: 8, borderRadius: "50%", background: done ? "#374151" : color, flexShrink: 0, ...(done ? {} : { animation: "livePulse 2s infinite" }) }} />
-                    <div style={{ minWidth: 0 }}>
-                      <div style={{ fontSize: 12, fontWeight: 600, color: "#e8f5e8", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{c.name}</div>
-                      <div style={{ fontSize: 10, color: done ? "#374151" : color, marginTop: 2 }}>{done ? "Completed" : "Active"}</div>
+          <>
+            {/* Horizontal scroll carousel */}
+            <div style={{ display: "flex", gap: 10, overflowX: "auto", paddingBottom: 4, scrollbarWidth: "none", margin: "0 -1.5rem", padding: "0 1.5rem 4px" } as React.CSSProperties}>
+              {myCampaigns.map(c => {
+                const color = TYPE_COLOR[c.type] ?? "#94a3b8";
+                const cta   = CTA_LABEL[c.type] ?? { href: "/", label: "Participate" };
+                const done  = c.status === "completed";
+                const pct   = c.target_usd && Number(c.target_usd) > 0
+                  ? Math.min(100, Math.round(Number(c.raised_usd ?? 0) / Number(c.target_usd) * 100))
+                  : null;
+                return (
+                  <div key={c.id} style={{
+                    flexShrink: 0, width: 200, background: "#0a0f0a",
+                    border: `1px solid ${color}25`, borderRadius: 12,
+                    overflow: "hidden",
+                  }}>
+                    {/* colour top stripe */}
+                    <div style={{ height: 3, background: done ? "#1e3a1e" : color }} />
+                    <div style={{ padding: 12 }}>
+                      {/* status dot + label */}
+                      <div style={{ display: "flex", alignItems: "center", gap: 5, marginBottom: 8 }}>
+                        <span style={{ width: 6, height: 6, borderRadius: "50%", background: done ? "#374151" : color, flexShrink: 0, display: "inline-block", ...(done ? {} : { animation: "livePulse 2s infinite" }) }} />
+                        <span style={{ fontSize: 10, color: done ? "#374151" : color, fontWeight: 600, textTransform: "uppercase" as const, letterSpacing: ".05em" }}>
+                          {done ? "Completed" : "Active"}
+                        </span>
+                      </div>
+                      {/* name */}
+                      <div style={{ fontSize: 12, fontWeight: 600, color: "#e8f5e8", lineHeight: 1.35, marginBottom: 8, display: "-webkit-box", WebkitBoxOrient: "vertical", WebkitLineClamp: 2, overflow: "hidden" } as React.CSSProperties}>
+                        {c.name}
+                      </div>
+                      {/* progress bar */}
+                      {pct !== null && (
+                        <div style={{ marginBottom: 10 }}>
+                          <div style={{ display: "flex", justifyContent: "space-between", fontSize: 9, color: "#6b9e6b", marginBottom: 3 }}>
+                            <span style={{ color, fontWeight: 600 }}>${Number(c.raised_usd ?? 0).toLocaleString()}</span>
+                            <span>{pct}%</span>
+                          </div>
+                          <div style={{ height: 3, background: "#1e3a1e", borderRadius: 2 }}>
+                            <div style={{ height: "100%", width: `${pct}%`, background: done ? "#1e3a1e" : color, borderRadius: 2 }} />
+                          </div>
+                        </div>
+                      )}
+                      {/* participants */}
+                      {(c.participants ?? 0) > 0 && (
+                        <div style={{ fontSize: 10, color: "#374151", marginBottom: 8 }}>
+                          👥 <span style={{ color: done ? "#374151" : color, fontWeight: 600 }}>{c.participants!.toLocaleString()}</span> joined
+                        </div>
+                      )}
+                      {/* CTA */}
+                      {!done && (
+                        <Link href={cta.href} style={{ display: "block", textAlign: "center", fontSize: 11, padding: "6px 0", borderRadius: 8, background: color + "18", color, border: `1px solid ${color}30`, textDecoration: "none", fontWeight: 600 }}>
+                          {cta.label} →
+                        </Link>
+                      )}
                     </div>
                   </div>
-                  {!done && (
-                    <Link href={cta.href} style={{ fontSize: 11, padding: "4px 10px", borderRadius: 8, background: color + "18", color, border: `1px solid ${color}30`, textDecoration: "none", fontWeight: 600, flexShrink: 0 }}>
-                      {cta.label}
-                    </Link>
-                  )}
-                </div>
-              );
-            })}
-          </div>
+                );
+              })}
+            </div>
+            {/* dot indicators */}
+            {myCampaigns.length > 1 && (
+              <div style={{ display: "flex", justifyContent: "center", gap: 5, marginTop: 8 }}>
+                {myCampaigns.map((_, i) => (
+                  <div key={i} style={{ width: 5, height: 5, borderRadius: "50%", background: i === 0 ? "#22c55e" : "#1e3a1e" }} />
+                ))}
+              </div>
+            )}
+          </>
         )}
       </div>
 
