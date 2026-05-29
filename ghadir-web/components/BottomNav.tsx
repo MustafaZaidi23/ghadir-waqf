@@ -1,8 +1,12 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useAccount } from "wagmi";
+import { useEffect, useState } from "react";
 
-const TABS = [
+const SUPER_ADMIN = process.env.NEXT_PUBLIC_ADMIN_ADDRESS?.toLowerCase();
+
+const BASE_TABS = [
   { href: "/",          icon: "🏠", label: "Home"    },
   { href: "/redeem",    icon: "❤️", label: "Hadiya"  },
   { href: "/campaigns", icon: "🕌", label: "Majlis"  },
@@ -12,7 +16,23 @@ const TABS = [
 
 export function BottomNav() {
   const path = usePathname();
+  const { address, isConnected } = useAccount();
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    if (!isConnected || !address) { setIsAdmin(false); return; }
+    if (address.toLowerCase() === SUPER_ADMIN) { setIsAdmin(true); return; }
+    fetch(`/api/my-role?wallet=${address}`)
+      .then(r => r.json())
+      .then(d => setIsAdmin(!!d.role))
+      .catch(() => setIsAdmin(false));
+  }, [address, isConnected]);
+
   if (path.startsWith("/admin")) return null;
+
+  const tabs = isAdmin
+    ? [...BASE_TABS, { href: "/admin", icon: "⚙️", label: "Admin" }]
+    : BASE_TABS;
 
   return (
     <nav style={{
@@ -22,7 +42,7 @@ export function BottomNav() {
       display: "flex",
       paddingBottom: "env(safe-area-inset-bottom, 8px)",
     }}>
-      {TABS.map((t) => {
+      {tabs.map((t) => {
         const active = t.href === "/" ? path === "/" : path.startsWith(t.href);
         return (
           <Link key={t.href} href={t.href} style={{
