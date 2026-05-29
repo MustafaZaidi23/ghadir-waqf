@@ -131,14 +131,44 @@ export async function POST(req: NextRequest) {
     const multiplierVal = Number(multiplierBN);
     const tokensEarned = (10 * count * multiplierVal) / 100;
 
+    // Find active salawat campaign this wallet has joined
+    let campaignId: string | null = null;
+    try {
+      const { data: joined } = await supabase
+        .from("campaign_participants")
+        .select("campaign_id")
+        .ilike("wallet_address", walletAddress);
+      if (joined && joined.length > 0) {
+        const ids = joined.map((r: { campaign_id: string }) => r.campaign_id);
+        const { data: sc } = await supabase
+          .from("campaigns")
+          .select("id")
+          .in("id", ids)
+          .eq("type", "salawat")
+          .eq("status", "active")
+          .limit(1)
+          .single();
+        if (sc) campaignId = sc.id;
+      }
+    } catch { /* non-fatal */ }
+
     if (log) {
       await supabase
         .from("salawat_logs")
-        .update({ status: "confirmed", tx_hash: txHash, tokens_earned: tokensEarned, multiplier: multiplierVal / 100, updated_at: new Date().toISOString() })
+        .update({
+          status: "confirmed", tx_hash: txHash, tokens_earned: tokensEarned,
+          multiplier: multiplierVal / 100, updated_at: new Date().toISOString(),
+          ...(campaignId ? { campaign_id: campaignId } : {}),
+        })
         .eq("id", log.id);
     }
 
-    return NextResponse.json({ tx_hash: txHash, tokens_earned: tokensEarned, multiplier: multiplierVal / 100, count });
+    // Increment campaign salawat counter
+    if (campaignId) {
+      await supabase.rpc("increment_campaign_salawat", { cid: campaignId, n: count });
+    }
+
+    return NextResponse.json({ tx_hash: txHash, tokens_earned: tokensEarned, multiplier: multiplierVal / 100, count, campaign_id: campaignId });
   } catch (err: unknown) {
     const msg = String((err as { shortMessage?: string; message?: string })?.shortMessage ?? (err as { message?: string })?.message ?? err).slice(0, 300);
     if (log) {

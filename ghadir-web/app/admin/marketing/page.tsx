@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState, useTransition } from "react";
-import { fetchCampaigns, upsertCampaign, deleteCampaign, Campaign } from "../actions";
+import { fetchCampaigns, fetchAllCharities, upsertCampaign, deleteCampaign, Campaign, CharityRow } from "../actions";
 
 const CAMPAIGN_TYPES = [
   { value: "awareness",   label: "Awareness" },
@@ -31,12 +31,13 @@ const STATUSES = [
 
 const BLANK: Campaign = {
   name: "", type: "awareness", status: "draft",
-  start_date: "", end_date: "", target_usd: null, platform: "telegram",
-  description: "", notes: "",
+  start_date: "", end_date: "", target_usd: null, target_count: null,
+  charity_id: null, platform: "telegram", description: "", notes: "",
 };
 
 export default function MarketingPage() {
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
+  const [charities, setCharities] = useState<CharityRow[]>([]);
   const [form, setForm] = useState<Campaign>(BLANK);
   const [editing, setEditing] = useState<string | null>(null);
   const [showForm, setShowForm] = useState(false);
@@ -46,7 +47,10 @@ export default function MarketingPage() {
   const [pending, startTransition] = useTransition();
 
   const reload = () => fetchCampaigns().then(setCampaigns).catch(console.error);
-  useEffect(() => { reload(); }, []);
+  useEffect(() => {
+    reload();
+    fetchAllCharities().then(setCharities).catch(console.error);
+  }, []);
 
   const set = (key: keyof Campaign, val: unknown) => setForm((f) => ({ ...f, [key]: val }));
 
@@ -124,10 +128,26 @@ export default function MarketingPage() {
                 {STATUSES.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}
               </select>
             </Field>
-            <Field label="Target USD (optional)">
+            <Field label="Target USD (fundraising)">
               <input type="number" min="0" className="input" value={form.target_usd ?? ""}
                 onChange={(e) => set("target_usd", e.target.value ? Number(e.target.value) : null)} />
             </Field>
+            {form.type === "fundraising" && (
+              <Field label="Linked charity">
+                <select className="input" value={form.charity_id ?? ""} onChange={(e) => set("charity_id", e.target.value || null)}>
+                  <option value="">— none —</option>
+                  {charities.filter(c => c.active && c.verified).map(c => (
+                    <option key={c.id} value={c.id}>{c.name}</option>
+                  ))}
+                </select>
+              </Field>
+            )}
+            {form.type === "salawat" && (
+              <Field label="Salawat target (e.g. 1000000)">
+                <input type="number" min="0" className="input" value={form.target_count ?? ""}
+                  onChange={(e) => set("target_count", e.target.value ? Number(e.target.value) : null)} />
+              </Field>
+            )}
             <Field label="Start date">
               <input type="date" className="input" value={form.start_date ?? ""} onChange={(e) => set("start_date", e.target.value)} />
             </Field>
@@ -203,7 +223,7 @@ export default function MarketingPage() {
                 </div>
               </div>
 
-              {/* Progress bar */}
+              {/* Fundraising progress */}
               {c.target_usd != null && progress !== null && (
                 <div className="space-y-1">
                   <div className="flex justify-between text-xs text-[#6b9e6b]">
@@ -213,6 +233,20 @@ export default function MarketingPage() {
                   <div className="h-1.5 bg-[#1e3a1e] rounded-full overflow-hidden">
                     <div className="h-full bg-[#22c55e] rounded-full transition-all" style={{ width: `${progress}%` }} />
                   </div>
+                </div>
+              )}
+              {/* Salawat progress */}
+              {c.type === "salawat" && (c.salawat_count ?? 0) > 0 && (
+                <div className="space-y-1">
+                  <div className="flex justify-between text-xs text-[#6b9e6b]">
+                    <span>{(c.salawat_count ?? 0).toLocaleString()} salawat logged</span>
+                    {c.target_count && <span>Target: {Number(c.target_count).toLocaleString()} ({Math.min(100, Math.round((c.salawat_count ?? 0) / c.target_count * 100))}%)</span>}
+                  </div>
+                  {c.target_count && (
+                    <div className="h-1.5 bg-[#1e3a1e] rounded-full overflow-hidden">
+                      <div className="h-full bg-[#f59e0b] rounded-full transition-all" style={{ width: `${Math.min(100, Math.round((c.salawat_count ?? 0) / c.target_count * 100))}%` }} />
+                    </div>
+                  )}
                 </div>
               )}
             </div>

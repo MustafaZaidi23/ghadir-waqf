@@ -59,3 +59,23 @@ create or replace function increment_participants(cid uuid)
 returns void language sql as $$
   update campaigns set participants = participants + 1 where id = cid;
 $$;
+
+-- Campaign ↔ charity link + salawat tracking
+alter table campaigns add column if not exists charity_id uuid references charities(id) on delete set null;
+alter table campaigns add column if not exists salawat_count integer not null default 0;
+alter table campaigns add column if not exists target_count  integer;
+
+-- Tag salawat logs with the campaign they belong to
+alter table salawat_logs add column if not exists campaign_id uuid references campaigns(id) on delete set null;
+
+-- RPC: increment salawat_count on a campaign
+create or replace function increment_campaign_salawat(cid uuid, n integer)
+returns void language sql as $$
+  update campaigns set salawat_count = salawat_count + n where id = cid;
+$$;
+
+-- RPC: increment raised_usd on a campaign
+create or replace function increment_campaign_raised(cid uuid, usd numeric)
+returns void language sql as $$
+  update campaigns set raised_usd = raised_usd + usd where id = cid;
+$$;

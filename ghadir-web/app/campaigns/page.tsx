@@ -36,7 +36,7 @@ const FLABEL: Record<Filter, string> = {
 
 const SEED: Campaign[] = [
   { id: "s1", name: "Arbaeen Ziyarat Fund 2026",   type: "fundraising", status: "active",   description: "Support low-income families to perform Ziyarat Arbaeen. Verified by The Zahra Trust. Funds released quarterly to pilgrims in need.",   target_usd: 5000,  raised_usd: 2150, participants: 318,  start_date: "2026-05-01", end_date: "2026-08-25", platform: "multiple" },
-  { id: "s2", name: "Salawat Million Challenge",    type: "salawat",     status: "active",   description: "Collectively reach 1,000,000 recorded Salawat before Eid al-Adha. Every Salawat counts — invite your family and masjid.",               participants: 1240, start_date: "2026-05-15", end_date: "2026-06-30", platform: "telegram" },
+  { id: "s2", name: "Salawat Million Challenge",    type: "salawat",     status: "active",   description: "Collectively reach 1,000,000 recorded Salawat before Eid al-Adha. Every Salawat counts — invite your family and masjid.",               participants: 1240, salawat_count: 148320, target_count: 1000000, start_date: "2026-05-15", end_date: "2026-06-30", platform: "telegram" },
   { id: "s3", name: "Ghadir Day — 18 Dhul Hijja",  type: "special_day", status: "active",   description: "Special 3× GHDR multiplier on the Day of Ghadir. Log extra Salawat, earn bonus tokens, and commemorate Imam Ali's appointment.",         start_date: "2026-07-12", end_date: "2026-07-12", platform: "instagram" },
   { id: "s4", name: "Clean Water for Yemen",        type: "fundraising", status: "active",   description: "Fund solar-powered water purification systems for rural Yemen. Every 1,000 GHDR = $1 donated directly to the field partner.",             target_usd: 10000, raised_usd: 3400, participants: 487, start_date: "2026-04-01", end_date: "2026-09-30", platform: "website" },
   { id: "s5", name: "Islamic Education Scholarship",type: "awareness",   status: "paused",   description: "Raise funds for Islamic studies scholarships. Launching July 2026 with partner institutions across three countries.",                       start_date: "2026-07-01", platform: "email" },
@@ -128,6 +128,8 @@ function HeroCarousel({ items, address, joinedIds, joiningId, onJoin }: {
   const cta = CTA[c.type] ?? { href: "/", label: "Get Involved" };
   const dl  = daysLeft(c.end_date);
   const pct = pctOf(c.raised_usd as number | undefined, c.target_usd);
+  const salawatPct = c.type === "salawat" && c.target_count && c.target_count > 0
+    ? Math.min(100, Math.round((c.salawat_count ?? 0) / c.target_count * 100)) : null;
   const joined  = joinedIds.has(c.id!);
   const joining = joiningId === c.id;
   // Show participant count optimistically
@@ -160,7 +162,7 @@ function HeroCarousel({ items, address, joinedIds, joiningId, onJoin }: {
           </p>
         )}
 
-        {/* Progress */}
+        {/* Fundraising progress */}
         {pct !== null && (
           <div style={{ marginBottom: 16 }}>
             <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, marginBottom: 6 }}>
@@ -169,6 +171,18 @@ function HeroCarousel({ items, address, joinedIds, joiningId, onJoin }: {
             </div>
             <div style={{ height: 7, background: "rgba(255,255,255,0.08)", borderRadius: 4, overflow: "hidden" }}>
               <div style={{ height: "100%", width: `${pct}%`, background: t.color, borderRadius: 4, transition: "width .6s" }} />
+            </div>
+          </div>
+        )}
+        {/* Salawat progress */}
+        {salawatPct !== null && (
+          <div style={{ marginBottom: 16 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, marginBottom: 6 }}>
+              <span style={{ color: t.color, fontWeight: 600 }}>{(c.salawat_count ?? 0).toLocaleString()} salawat logged</span>
+              <span style={{ color: "#6b7280" }}>Goal {Number(c.target_count).toLocaleString()} · {salawatPct}%</span>
+            </div>
+            <div style={{ height: 7, background: "rgba(255,255,255,0.08)", borderRadius: 4, overflow: "hidden" }}>
+              <div style={{ height: "100%", width: `${salawatPct}%`, background: t.color, borderRadius: 4, transition: "width .6s" }} />
             </div>
           </div>
         )}
@@ -229,6 +243,8 @@ function CampaignCard({ c, address, joinedIds, joiningId, onJoin }: {
   const t   = T[c.type] ?? T.other;
   const cta = CTA[c.type] ?? { href: "/", label: "Get Involved" };
   const pct = pctOf(c.raised_usd as number | undefined, c.target_usd);
+  const salawatPct = c.type === "salawat" && c.target_count && c.target_count > 0
+    ? Math.min(100, Math.round((c.salawat_count ?? 0) / c.target_count * 100)) : null;
   const dl  = daysLeft(c.end_date);
   const done   = c.status === "completed";
   const paused = c.status === "paused";
@@ -276,6 +292,17 @@ function CampaignCard({ c, address, joinedIds, joiningId, onJoin }: {
             </div>
             <div style={{ height: 4, background: "#1a2e1a", borderRadius: 2, overflow: "hidden" }}>
               <div style={{ height: "100%", width: `${pct}%`, background: done ? "#2d4a2d" : t.color, borderRadius: 2 }} />
+            </div>
+          </div>
+        )}
+        {salawatPct !== null && (
+          <div>
+            <div style={{ display: "flex", justifyContent: "space-between", fontSize: 10, color: "#6b9e6b", marginBottom: 5 }}>
+              <span style={{ color: done ? "#6b9e6b" : t.color, fontWeight: 600 }}>📿 {(c.salawat_count ?? 0).toLocaleString()}</span>
+              <span>/ {Number(c.target_count).toLocaleString()} · {salawatPct}%</span>
+            </div>
+            <div style={{ height: 4, background: "#1a2e1a", borderRadius: 2, overflow: "hidden" }}>
+              <div style={{ height: "100%", width: `${salawatPct}%`, background: done ? "#2d4a2d" : t.color, borderRadius: 2 }} />
             </div>
           </div>
         )}

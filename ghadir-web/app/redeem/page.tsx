@@ -4,6 +4,7 @@ import { usePrivy } from "@privy-io/react-auth";
 import { formatUnits, parseUnits } from "viem";
 import { SALAWAT_TOKEN, HADIYA_REDEMPTION, SALAWAT_ABI, REDEMPTION_ABI, EXPLORER } from "@/lib/contracts";
 import { useState, useEffect } from "react";
+import { fetchPublicCampaigns, Campaign } from "../admin/actions";
 
 const TOKENS_PER_DOLLAR = 1000n;
 
@@ -25,6 +26,7 @@ export default function Redeem() {
   const [selected, setSelected] = useState<Charity | null>(null);
   const [amount, setAmount] = useState("");
   const [step, setStep] = useState<"idle" | "approving" | "redeeming" | "done">("idle");
+  const [linkedCampaign, setLinkedCampaign] = useState<Campaign | null>(null);
 
   const { data: balance } = useReadContract({
     address: SALAWAT_TOKEN, abi: SALAWAT_ABI,
@@ -47,16 +49,46 @@ export default function Redeem() {
     fetch("/api/charities").then((r) => r.json()).then((d) => setCharities(Array.isArray(d) ? d : []));
   }, []);
 
+  // Check if wallet has joined a fundraising campaign with a linked charity
+  useEffect(() => {
+    if (!address) return;
+    Promise.all([
+      fetch(`/api/join-campaign?wallet=${address}`).then(r => r.json()),
+      fetchPublicCampaigns().catch(() => [] as Campaign[]),
+    ]).then(([joinData, campaigns]) => {
+      const ids: string[] = joinData.joined ?? [];
+      const fc = campaigns.find(c =>
+        c.type === "fundraising" && c.status === "active" && c.charity_id && ids.includes(c.id!)
+      ) ?? null;
+      setLinkedCampaign(fc);
+    }).catch(() => {});
+  }, [address]);
+
+  // Pre-select linked charity when charities load
+  useEffect(() => {
+    if (!linkedCampaign?.charity_id || charities.length === 0 || selected) return;
+    const match = charities.find(c => c.id === linkedCampaign.charity_id);
+    if (match) setSelected(match);
+  }, [linkedCampaign, charities, selected]);
+
   useEffect(() => {
     if (txConfirmed) {
       if (step === "approving") {
         refetchAllowance();
         setStep("idle");
       } else if (step === "redeeming") {
+        // Update campaign raised_usd
+        if (selected) {
+          fetch("/api/campaign-progress", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ charity_id: selected.id, amount_usd: Number(amount) / Number(TOKENS_PER_DOLLAR) }),
+          }).catch(() => {});
+        }
         setStep("done");
       }
     }
-  }, [txConfirmed, step, refetchAllowance]);
+  }, [txConfirmed, step, refetchAllowance, selected, amount]);
 
   if (!isConnected) {
     return (
@@ -126,6 +158,21 @@ export default function Redeem() {
         <span className="text-[#6b9e6b] text-sm">Your balance</span>
         <span className="text-[#22c55e] font-bold text-lg">{ghdr} GHDR</span>
       </div>
+
+      {/* Campaign banner */}
+      {linkedCampaign && (
+        <div style={{ background: "linear-gradient(90deg,#0a2016,#0f3b1f)", border: "1px solid #22c55e30", borderRadius: 12, padding: "12px 16px", display: "flex", alignItems: "center", gap: 12 }}>
+          <span style={{ fontSize: 20, flexShrink: 0 }}>💰</span>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontSize: 13, fontWeight: 600, color: "#e8f5e8" }}>{linkedCampaign.name}</div>
+            <div style={{ fontSize: 11, color: "#22c55e", marginTop: 2 }}>
+              You're participating · charity pre-selected below
+              {linkedCampaign.target_usd && ` · $${Number(linkedCampaign.raised_usd ?? 0).toLocaleString()} / $${Number(linkedCampaign.target_usd).toLocaleString()} raised`}
+            </div>
+          </div>
+          <span style={{ fontSize: 18 }}>✓</span>
+        </div>
+      )}
 
       {/* Step 1: pick charity */}
       <div className="card space-y-4">
