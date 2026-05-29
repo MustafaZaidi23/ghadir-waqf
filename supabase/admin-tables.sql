@@ -44,3 +44,18 @@ create table if not exists campaigns (
 
 -- If the table already exists, add the column:
 alter table campaigns add column if not exists participants integer not null default 0;
+
+-- Campaign participation tracking
+create table if not exists campaign_participants (
+  id uuid primary key default gen_random_uuid(),
+  campaign_id uuid not null references campaigns(id) on delete cascade,
+  wallet_address text not null,
+  joined_at timestamptz not null default now(),
+  unique(campaign_id, wallet_address)
+);
+
+-- RPC to safely increment participant count
+create or replace function increment_participants(cid uuid)
+returns void language sql as $$
+  update campaigns set participants = participants + 1 where id = cid;
+$$;

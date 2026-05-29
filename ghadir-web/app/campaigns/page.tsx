@@ -1,6 +1,8 @@
 "use client";
 import { useEffect, useState, useRef, useCallback } from "react";
 import Link from "next/link";
+import { useAccount } from "wagmi";
+import { usePrivy } from "@privy-io/react-auth";
 import { fetchPublicCampaigns, Campaign } from "../admin/actions";
 
 const T: Record<string, { icon: string; label: string; color: string; bg: string }> = {
@@ -20,9 +22,9 @@ const PLATFORM_ICONS: Record<string, string> = {
 const CTA: Record<string, { href: string; label: string }> = {
   salawat:     { href: "/",       label: "Log Salawat"   },
   fundraising: { href: "/redeem", label: "Donate Hadiya" },
-  awareness:   { href: "/",       label: "Join Now"       },
-  special_day: { href: "/",       label: "Participate"    },
-  ramadan:     { href: "/",       label: "Earn GHDR"      },
+  awareness:   { href: "/",       label: "Get Involved"  },
+  special_day: { href: "/",       label: "Earn Bonus"    },
+  ramadan:     { href: "/",       label: "Earn GHDR"     },
 };
 
 const FILTERS = ["all", "fundraising", "salawat", "awareness", "special_day", "ramadan"] as const;
@@ -32,63 +34,91 @@ const FLABEL: Record<Filter, string> = {
   awareness: "Awareness", special_day: "Special Day", ramadan: "Ramadan",
 };
 
-// Seed data shown until real DB records exist
 const SEED: Campaign[] = [
-  {
-    id: "s1", name: "Arbaeen Ziyarat Fund 2026", type: "fundraising", status: "active",
-    description: "Support low-income families to perform Ziyarat Arbaeen. Verified by The Zahra Trust. Funds released quarterly to pilgrims in need.",
-    target_usd: 5000, raised_usd: 2150, participants: 318, start_date: "2026-05-01", end_date: "2026-08-25", platform: "multiple",
-  },
-  {
-    id: "s2", name: "Salawat Million Challenge", type: "salawat", status: "active",
-    description: "Collectively reach 1,000,000 recorded Salawat before Eid al-Adha. Every Salawat counts — invite your family and masjid.",
-    participants: 1240, start_date: "2026-05-15", end_date: "2026-06-30", platform: "telegram",
-  },
-  {
-    id: "s3", name: "Ghadir Day — 18 Dhul Hijja", type: "special_day", status: "active",
-    description: "Special 3× GHDR multiplier on the Day of Ghadir. Log extra Salawat, earn bonus tokens, and commemorate Imam Ali's appointment.",
-    start_date: "2026-07-12", end_date: "2026-07-12", platform: "instagram",
-  },
-  {
-    id: "s4", name: "Clean Water for Yemen", type: "fundraising", status: "active",
-    description: "Fund solar-powered water purification systems for rural Yemen. Every 1,000 GHDR = $1 donated directly to the field partner.",
-    target_usd: 10000, raised_usd: 3400, participants: 487, start_date: "2026-04-01", end_date: "2026-09-30", platform: "website",
-  },
-  {
-    id: "s5", name: "Islamic Education Scholarship", type: "awareness", status: "paused",
-    description: "Raise funds for Islamic studies scholarships. Launching July 2026 with partner institutions across three countries.",
-    start_date: "2026-07-01", platform: "email",
-  },
-  {
-    id: "s6", name: "Ramadan GHDR Boost 2026", type: "ramadan", status: "completed",
-    description: "2× multiplier ran throughout Ramadan 2026. Community earned 1.8M+ GHDR and donated $1,875 in hadiya to verified charities.",
-    target_usd: 2000, raised_usd: 1875, participants: 892, start_date: "2026-03-01", end_date: "2026-03-30", platform: "telegram",
-  },
+  { id: "s1", name: "Arbaeen Ziyarat Fund 2026",   type: "fundraising", status: "active",   description: "Support low-income families to perform Ziyarat Arbaeen. Verified by The Zahra Trust. Funds released quarterly to pilgrims in need.",   target_usd: 5000,  raised_usd: 2150, participants: 318,  start_date: "2026-05-01", end_date: "2026-08-25", platform: "multiple" },
+  { id: "s2", name: "Salawat Million Challenge",    type: "salawat",     status: "active",   description: "Collectively reach 1,000,000 recorded Salawat before Eid al-Adha. Every Salawat counts — invite your family and masjid.",               participants: 1240, start_date: "2026-05-15", end_date: "2026-06-30", platform: "telegram" },
+  { id: "s3", name: "Ghadir Day — 18 Dhul Hijja",  type: "special_day", status: "active",   description: "Special 3× GHDR multiplier on the Day of Ghadir. Log extra Salawat, earn bonus tokens, and commemorate Imam Ali's appointment.",         start_date: "2026-07-12", end_date: "2026-07-12", platform: "instagram" },
+  { id: "s4", name: "Clean Water for Yemen",        type: "fundraising", status: "active",   description: "Fund solar-powered water purification systems for rural Yemen. Every 1,000 GHDR = $1 donated directly to the field partner.",             target_usd: 10000, raised_usd: 3400, participants: 487, start_date: "2026-04-01", end_date: "2026-09-30", platform: "website" },
+  { id: "s5", name: "Islamic Education Scholarship",type: "awareness",   status: "paused",   description: "Raise funds for Islamic studies scholarships. Launching July 2026 with partner institutions across three countries.",                       start_date: "2026-07-01", platform: "email" },
+  { id: "s6", name: "Ramadan GHDR Boost 2026",      type: "ramadan",     status: "completed",description: "2× multiplier ran throughout Ramadan 2026. Community earned 1.8M+ GHDR and donated $1,875 in hadiya to verified charities.",              target_usd: 2000, raised_usd: 1875, participants: 892, start_date: "2026-03-01", end_date: "2026-03-30", platform: "telegram" },
 ];
 
 function daysLeft(end?: string) {
   if (!end) return null;
   return Math.max(0, Math.ceil((new Date(end).getTime() - Date.now()) / 86400000));
 }
-function progress(raised?: number, target?: number | null) {
+function pctOf(raised?: number, target?: number | null) {
   if (!target || Number(target) <= 0) return null;
   return Math.min(100, Math.round(Number(raised ?? 0) / Number(target) * 100));
 }
 
+// ─── Join button ──────────────────────────────────────────────────────────────
+
+function JoinButton({
+  campaign, address, joined, joining, onJoin, color,
+}: {
+  campaign: Campaign; address?: string; joined: boolean; joining: boolean;
+  onJoin: (id: string) => void; color: string;
+}) {
+  const { login } = usePrivy();
+
+  if (!address) {
+    return (
+      <button onClick={login} style={{
+        fontSize: 12, padding: "7px 16px", borderRadius: 8, fontWeight: 600,
+        background: color + "18", color, border: `1px solid ${color}35`,
+        cursor: "pointer",
+      }}>
+        Sign in to join
+      </button>
+    );
+  }
+  if (joined) {
+    return (
+      <span style={{
+        fontSize: 12, padding: "7px 16px", borderRadius: 8, fontWeight: 600,
+        background: "#22c55e18", color: "#22c55e", border: "1px solid #22c55e35",
+        display: "inline-flex", alignItems: "center", gap: 5,
+      }}>
+        ✓ Joined
+      </span>
+    );
+  }
+  return (
+    <button
+      onClick={() => onJoin(campaign.id!)}
+      disabled={joining}
+      style={{
+        fontSize: 12, padding: "7px 16px", borderRadius: 8, fontWeight: 600,
+        background: color + "18", color, border: `1px solid ${color}35`,
+        cursor: joining ? "not-allowed" : "pointer", opacity: joining ? 0.6 : 1,
+        transition: "opacity .15s",
+      }}
+    >
+      {joining ? "Joining…" : "Join Campaign"}
+    </button>
+  );
+}
+
 // ─── Hero Carousel ────────────────────────────────────────────────────────────
 
-function HeroCarousel({ items }: { items: Campaign[] }) {
+function HeroCarousel({ items, address, joinedIds, joiningId, onJoin }: {
+  items: Campaign[]; address?: string;
+  joinedIds: Set<string>; joiningId: string | null;
+  onJoin: (id: string) => void;
+}) {
   const [slide, setSlide] = useState(0);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const go = useCallback((i: number) => {
     setSlide(i);
     if (timerRef.current) clearInterval(timerRef.current);
-    timerRef.current = setInterval(() => setSlide(s => (s + 1) % items.length), 5000);
+    if (items.length > 1)
+      timerRef.current = setInterval(() => setSlide(s => (s + 1) % items.length), 5000);
   }, [items.length]);
 
   useEffect(() => {
-    if (items.length > 1) go(0);
+    go(0);
     return () => { if (timerRef.current) clearInterval(timerRef.current); };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [items.length]);
@@ -97,16 +127,20 @@ function HeroCarousel({ items }: { items: Campaign[] }) {
   const t   = T[c.type] ?? T.other;
   const cta = CTA[c.type] ?? { href: "/", label: "Get Involved" };
   const dl  = daysLeft(c.end_date);
-  const pct = progress(c.raised_usd as number | undefined, c.target_usd);
+  const pct = pctOf(c.raised_usd as number | undefined, c.target_usd);
+  const joined  = joinedIds.has(c.id!);
+  const joining = joiningId === c.id;
+  // Show participant count optimistically
+  const displayParticipants = (c.participants ?? 0) + (joined && !joinedIds.has(c.id! + "_pre") ? 0 : 0);
 
   return (
     <div style={{ borderRadius: 16, overflow: "hidden", border: `1px solid ${t.color}25` }}>
-      <div style={{ background: t.bg, padding: 24, minHeight: 230 }}>
+      <div style={{ background: t.bg, padding: 24, minHeight: 240 }}>
 
-        {/* Top row: type pill + urgency badge */}
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 18 }}>
+        {/* Type pill + urgency */}
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
           <span style={{ fontSize: 11, fontWeight: 600, color: t.color, background: t.color + "20", border: `1px solid ${t.color}35`, borderRadius: 20, padding: "4px 12px" }}>
-            {t.icon}  {t.label}
+            {t.icon} {t.label}
           </span>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             {dl !== null && dl <= 7 && (
@@ -114,28 +148,21 @@ function HeroCarousel({ items }: { items: Campaign[] }) {
                 {dl === 0 ? "Ends today!" : `${dl}d left`}
               </span>
             )}
-            {c.platform && (
-              <span style={{ fontSize: 13, color: "rgba(255,255,255,0.25)" }}>{PLATFORM_ICONS[c.platform]}</span>
-            )}
+            {c.platform && <span style={{ fontSize: 14, color: "rgba(255,255,255,0.22)" }}>{PLATFORM_ICONS[c.platform]}</span>}
           </div>
         </div>
 
-        {/* Title */}
-        <h2 style={{ fontSize: 22, fontWeight: 700, color: "#e8f5e8", margin: "0 0 8px", lineHeight: 1.25 }}>{c.name}</h2>
+        <h2 style={{ fontSize: 21, fontWeight: 700, color: "#e8f5e8", margin: "0 0 8px", lineHeight: 1.25 }}>{c.name}</h2>
 
-        {/* Description */}
         {c.description && (
-          <p style={{
-            fontSize: 13, color: "#9ca3af", lineHeight: 1.6, margin: "0 0 18px",
-            display: "-webkit-box", WebkitBoxOrient: "vertical", WebkitLineClamp: 2, overflow: "hidden",
-          } as React.CSSProperties}>
+          <p style={{ fontSize: 13, color: "#9ca3af", lineHeight: 1.6, margin: "0 0 16px", display: "-webkit-box", WebkitBoxOrient: "vertical", WebkitLineClamp: 2, overflow: "hidden" } as React.CSSProperties}>
             {c.description}
           </p>
         )}
 
         {/* Progress */}
         {pct !== null && (
-          <div style={{ marginBottom: 18 }}>
+          <div style={{ marginBottom: 16 }}>
             <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, marginBottom: 6 }}>
               <span style={{ color: t.color, fontWeight: 600 }}>${Number(c.raised_usd ?? 0).toLocaleString()} raised</span>
               <span style={{ color: "#6b7280" }}>Goal ${Number(c.target_usd).toLocaleString()} · {pct}%</span>
@@ -146,51 +173,46 @@ function HeroCarousel({ items }: { items: Campaign[] }) {
           </div>
         )}
 
-        {/* Participants */}
-        {(c.participants ?? 0) > 0 && (
+        {/* Participants row */}
+        {displayParticipants > 0 && (
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
             <div style={{ display: "flex" }}>
-              {[...Array(Math.min(5, c.participants!))].map((_, i) => (
-                <div key={i} style={{ width: 22, height: 22, borderRadius: "50%", background: t.color + "30", border: `1.5px solid ${t.color}50`, marginLeft: i > 0 ? -7 : 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10 }}>
-                  👤
-                </div>
+              {[...Array(Math.min(5, displayParticipants))].map((_, i) => (
+                <div key={i} style={{ width: 22, height: 22, borderRadius: "50%", background: t.color + "28", border: `1.5px solid ${t.color}45`, marginLeft: i > 0 ? -7 : 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10 }}>👤</div>
               ))}
             </div>
             <span style={{ fontSize: 12, color: "#9ca3af" }}>
-              <strong style={{ color: t.color }}>{c.participants!.toLocaleString()}</strong> participating
+              <strong style={{ color: t.color }}>{displayParticipants.toLocaleString()}</strong> participating
             </span>
           </div>
         )}
 
-        {/* Bottom: CTA + dots */}
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <Link href={cta.href} className="btn-primary" style={{ fontSize: 13, padding: "8px 20px" }}>
-            {cta.label} →
-          </Link>
-
+        {/* Actions row */}
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10 }}>
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" as const }}>
+            <JoinButton campaign={c} address={address} joined={joined} joining={joining} onJoin={onJoin} color={t.color} />
+            {joined && (
+              <Link href={cta.href} className="btn-primary" style={{ fontSize: 12, padding: "7px 16px" }}>
+                {cta.label} →
+              </Link>
+            )}
+          </div>
           {items.length > 1 && (
-            <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+            <div style={{ display: "flex", gap: 6, flexShrink: 0 }}>
               {items.map((_, i) => (
                 <button key={i} onClick={() => go(i)} style={{
                   width: i === slide ? 22 : 7, height: 7, borderRadius: 4,
                   background: i === slide ? t.color : "rgba(255,255,255,0.18)",
-                  border: "none", cursor: "pointer", padding: 0,
-                  transition: "all .3s ease",
+                  border: "none", cursor: "pointer", padding: 0, transition: "all .3s",
                 }} />
               ))}
             </div>
           )}
         </div>
       </div>
-
-      {/* Slide progress bar */}
       {items.length > 1 && (
         <div style={{ height: 2, background: "#1e3a1e" }}>
-          <div style={{
-            height: "100%", background: t.color, opacity: .5,
-            animation: "slideProgress 5s linear infinite",
-            width: "100%",
-          }} />
+          <div style={{ height: "100%", background: t.color, opacity: .45, animation: "slideProgress 5s linear infinite", width: "100%" }} />
         </div>
       )}
     </div>
@@ -199,21 +221,22 @@ function HeroCarousel({ items }: { items: Campaign[] }) {
 
 // ─── Campaign Card ─────────────────────────────────────────────────────────────
 
-function CampaignCard({ c }: { c: Campaign }) {
+function CampaignCard({ c, address, joinedIds, joiningId, onJoin }: {
+  c: Campaign; address?: string;
+  joinedIds: Set<string>; joiningId: string | null;
+  onJoin: (id: string) => void;
+}) {
   const t   = T[c.type] ?? T.other;
   const cta = CTA[c.type] ?? { href: "/", label: "Get Involved" };
-  const pct = progress(c.raised_usd as number | undefined, c.target_usd);
+  const pct = pctOf(c.raised_usd as number | undefined, c.target_usd);
   const dl  = daysLeft(c.end_date);
   const done   = c.status === "completed";
   const paused = c.status === "paused";
+  const joined  = joinedIds.has(c.id!);
+  const joining = joiningId === c.id;
 
   return (
-    <div style={{
-      background: "#111a11", border: "1px solid #1e3a1e", borderRadius: 14,
-      overflow: "hidden", opacity: done ? 0.72 : 1,
-      display: "flex", flexDirection: "column",
-    }}>
-      {/* Colour accent stripe */}
+    <div style={{ background: "#111a11", border: "1px solid #1e3a1e", borderRadius: 14, overflow: "hidden", opacity: done ? 0.72 : 1, display: "flex", flexDirection: "column" }}>
       <div style={{ height: 3, background: done ? "#1e3a1e" : t.color }} />
 
       <div style={{ padding: "14px 16px 16px", flex: 1, display: "flex", flexDirection: "column", gap: 10 }}>
@@ -221,11 +244,7 @@ function CampaignCard({ c }: { c: Campaign }) {
         {/* Header */}
         <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 8 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <div style={{
-              width: 40, height: 40, borderRadius: 10, flexShrink: 0,
-              background: t.color + "18", border: `1px solid ${t.color}28`,
-              display: "flex", alignItems: "center", justifyContent: "center", fontSize: 19,
-            }}>
+            <div style={{ width: 40, height: 40, borderRadius: 10, flexShrink: 0, background: t.color + "18", border: `1px solid ${t.color}28`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 19 }}>
               {t.icon}
             </div>
             <div>
@@ -235,24 +254,20 @@ function CampaignCard({ c }: { c: Campaign }) {
           </div>
           {done   && <span style={{ fontSize: 10, color: "#38bdf8", background: "#38bdf815", border: "1px solid #38bdf830", borderRadius: 20, padding: "2px 9px", flexShrink: 0 }}>Done</span>}
           {paused && <span style={{ fontSize: 10, color: "#f59e0b", background: "#f59e0b15", border: "1px solid #f59e0b30", borderRadius: 20, padding: "2px 9px", flexShrink: 0 }}>Soon</span>}
-          {!done && !paused && dl !== null && dl <= 3 && (
+          {joined && !done && <span style={{ fontSize: 10, color: "#22c55e", background: "#22c55e15", border: "1px solid #22c55e30", borderRadius: 20, padding: "2px 9px", flexShrink: 0 }}>✓ Joined</span>}
+          {!done && !paused && !joined && dl !== null && dl <= 3 && (
             <span style={{ fontSize: 10, color: "#f87171", background: "#f8717115", border: "1px solid #f8717130", borderRadius: 20, padding: "2px 9px", flexShrink: 0, fontWeight: 700 }}>
               {dl === 0 ? "Today!" : `${dl}d`}
             </span>
           )}
         </div>
 
-        {/* Description */}
         {c.description && (
-          <p style={{
-            fontSize: 12, color: "#6b9e6b", lineHeight: 1.55, margin: 0,
-            display: "-webkit-box", WebkitBoxOrient: "vertical", WebkitLineClamp: 2, overflow: "hidden",
-          } as React.CSSProperties}>
+          <p style={{ fontSize: 12, color: "#6b9e6b", lineHeight: 1.55, margin: 0, display: "-webkit-box", WebkitBoxOrient: "vertical", WebkitLineClamp: 2, overflow: "hidden" } as React.CSSProperties}>
             {c.description}
           </p>
         )}
 
-        {/* Progress bar */}
         {pct !== null && (
           <div>
             <div style={{ display: "flex", justifyContent: "space-between", fontSize: 10, color: "#6b9e6b", marginBottom: 5 }}>
@@ -265,34 +280,31 @@ function CampaignCard({ c }: { c: Campaign }) {
           </div>
         )}
 
-        {/* Participants */}
         {(c.participants ?? 0) > 0 && (
-          <div style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11 }}>
-            <span style={{ color: done ? "#374151" : t.color, fontWeight: 600 }}>
-              👥 {c.participants!.toLocaleString()}
-            </span>
-            <span style={{ color: "#374151" }}>participants</span>
+          <div style={{ fontSize: 11, color: "#374151" }}>
+            <span style={{ color: done ? "#374151" : t.color, fontWeight: 600 }}>👥 {c.participants!.toLocaleString()}</span> participants
           </div>
         )}
 
         {/* Footer */}
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "auto" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "auto", gap: 8, flexWrap: "wrap" as const }}>
           <div style={{ fontSize: 11, color: "#374151", display: "flex", gap: 8 }}>
             {c.platform && <span>{PLATFORM_ICONS[c.platform] ?? "🔗"} {c.platform}</span>}
             {!done && dl !== null && dl > 3 && <span style={{ color: "#6b9e6b" }}>{dl}d left</span>}
             {done && c.end_date && <span>Ended {c.end_date}</span>}
           </div>
           {!done && (
-            <Link href={cta.href} style={{
-              fontSize: 11, padding: "5px 12px", borderRadius: 8, fontWeight: 600,
-              background: t.color + "18", color: t.color, border: `1px solid ${t.color}30`,
-              textDecoration: "none", transition: "opacity .15s",
-            }}>
-              {cta.label} →
-            </Link>
+            <div style={{ display: "flex", gap: 6 }}>
+              {joined ? (
+                <Link href={cta.href} style={{ fontSize: 11, padding: "5px 12px", borderRadius: 8, fontWeight: 600, background: t.color + "18", color: t.color, border: `1px solid ${t.color}30`, textDecoration: "none" }}>
+                  {cta.label} →
+                </Link>
+              ) : (
+                <JoinButton campaign={c} address={address} joined={joined} joining={joining} onJoin={onJoin} color={t.color} />
+              )}
+            </div>
           )}
         </div>
-
       </div>
     </div>
   );
@@ -301,10 +313,14 @@ function CampaignCard({ c }: { c: Campaign }) {
 // ─── Page ──────────────────────────────────────────────────────────────────────
 
 export default function CampaignsPage() {
-  const [campaigns, setCampaigns] = useState<Campaign[]>([]);
-  const [loading,   setLoading]   = useState(true);
-  const [filter,    setFilter]    = useState<Filter>("all");
+  const { address } = useAccount();
+  const [campaigns,  setCampaigns]  = useState<Campaign[]>([]);
+  const [loading,    setLoading]    = useState(true);
+  const [filter,     setFilter]     = useState<Filter>("all");
+  const [joinedIds,  setJoinedIds]  = useState<Set<string>>(new Set());
+  const [joiningId,  setJoiningId]  = useState<string | null>(null);
 
+  // Load campaigns
   useEffect(() => {
     fetchPublicCampaigns()
       .then(d => setCampaigns(d.length > 0 ? d : SEED))
@@ -312,12 +328,42 @@ export default function CampaignsPage() {
       .finally(() => setLoading(false));
   }, []);
 
+  // Load which campaigns this wallet has already joined
+  useEffect(() => {
+    if (!address) { setJoinedIds(new Set()); return; }
+    fetch(`/api/join-campaign?wallet=${address}`)
+      .then(r => r.json())
+      .then(d => setJoinedIds(new Set(d.joined ?? [])))
+      .catch(() => {});
+  }, [address]);
+
+  const handleJoin = useCallback(async (campaignId: string) => {
+    if (!address || joiningId) return;
+    setJoiningId(campaignId);
+    try {
+      const res = await fetch("/api/join-campaign", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ campaign_id: campaignId, wallet_address: address }),
+      });
+      if (res.ok) {
+        setJoinedIds(prev => new Set([...prev, campaignId]));
+        // Optimistically bump participant count in local state
+        setCampaigns(prev => prev.map(c =>
+          c.id === campaignId ? { ...c, participants: (c.participants ?? 0) + 1 } : c
+        ));
+      }
+    } finally {
+      setJoiningId(null);
+    }
+  }, [address, joiningId]);
+
   const active    = campaigns.filter(c => c.status === "active");
   const upcoming  = campaigns.filter(c => c.status === "paused");
   const completed = campaigns.filter(c => c.status === "completed");
+  const filtered  = filter === "all" ? campaigns : campaigns.filter(c => c.type === filter);
 
-  const filtered =
-    filter === "all" ? campaigns : campaigns.filter(c => c.type === filter);
+  const cardProps = { address, joinedIds, joiningId, onJoin: handleJoin };
 
   if (loading) {
     return (
@@ -331,7 +377,7 @@ export default function CampaignsPage() {
   return (
     <div style={{ maxWidth: 800, margin: "0 auto" }}>
 
-      {/* Page header */}
+      {/* Header */}
       <div style={{ marginBottom: 20 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4 }}>
           <h1 style={{ fontSize: 22, fontWeight: 700, color: "#e8f5e8", margin: 0 }}>Campaigns</h1>
@@ -343,22 +389,22 @@ export default function CampaignsPage() {
           )}
         </div>
         <p style={{ fontSize: 13, color: "#6b9e6b", margin: 0 }}>
-          Participate in active drives · earn bonus GHDR · support the Waqf
+          Join active drives · earn bonus GHDR · support the Waqf
         </p>
       </div>
 
-      {/* ── Hero carousel — shown only on "all" view ── */}
+      {/* Hero carousel */}
       {filter === "all" && active.length > 0 && (
         <div style={{ marginBottom: 24 }}>
           <div style={{ fontSize: 10, fontWeight: 600, color: "#6b9e6b", textTransform: "uppercase", letterSpacing: ".1em", marginBottom: 10, display: "flex", alignItems: "center", gap: 6 }}>
             <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#22c55e", display: "inline-block", animation: "livePulse 2s infinite" }} />
             Live now
           </div>
-          <HeroCarousel items={active} />
+          <HeroCarousel items={active} {...cardProps} />
         </div>
       )}
 
-      {/* ── Filter pills ── */}
+      {/* Filter pills */}
       <div style={{ display: "flex", gap: 8, overflowX: "auto", paddingBottom: 4, marginBottom: 20, scrollbarWidth: "none" } as React.CSSProperties}>
         {FILTERS.map(f => {
           const n = f === "all" ? campaigns.length : campaigns.filter(c => c.type === f).length;
@@ -372,25 +418,23 @@ export default function CampaignsPage() {
               border: on ? "1px solid #22c55e50" : "1px solid #1e3a1e",
               color: on ? "#22c55e" : "#6b9e6b", fontWeight: on ? 600 : 400,
             }}>
-              {FLABEL[f]}{n > 0 && <span style={{ marginLeft: 5, opacity: .55, fontWeight: 400 }}>{n}</span>}
+              {FLABEL[f]}<span style={{ marginLeft: 5, opacity: .5, fontWeight: 400 }}>{n}</span>
             </button>
           );
         })}
       </div>
 
-      {/* ── Upcoming ── */}
+      {/* Upcoming */}
       {filter === "all" && upcoming.length > 0 && (
         <section style={{ marginBottom: 24 }}>
-          <div style={{ fontSize: 10, fontWeight: 600, color: "#6b9e6b", textTransform: "uppercase", letterSpacing: ".1em", marginBottom: 10 }}>
-            Coming soon
-          </div>
+          <div style={{ fontSize: 10, fontWeight: 600, color: "#6b9e6b", textTransform: "uppercase", letterSpacing: ".1em", marginBottom: 10 }}>Coming soon</div>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(260px,1fr))", gap: 12 }}>
-            {upcoming.map(c => <CampaignCard key={c.id} c={c} />)}
+            {upcoming.map(c => <CampaignCard key={c.id} c={c} {...cardProps} />)}
           </div>
         </section>
       )}
 
-      {/* ── Filtered / full grid ── */}
+      {/* Filtered grid */}
       {filter !== "all" && (
         filtered.length === 0 ? (
           <div className="card" style={{ textAlign: "center", padding: "52px 16px" }}>
@@ -399,19 +443,17 @@ export default function CampaignsPage() {
           </div>
         ) : (
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(260px,1fr))", gap: 12 }}>
-            {filtered.map(c => <CampaignCard key={c.id} c={c} />)}
+            {filtered.map(c => <CampaignCard key={c.id} c={c} {...cardProps} />)}
           </div>
         )
       )}
 
-      {/* ── Completed ── */}
+      {/* Completed */}
       {filter === "all" && completed.length > 0 && (
         <section style={{ marginTop: 28 }}>
-          <div style={{ fontSize: 10, fontWeight: 600, color: "#6b9e6b", textTransform: "uppercase", letterSpacing: ".1em", marginBottom: 10 }}>
-            Completed
-          </div>
+          <div style={{ fontSize: 10, fontWeight: 600, color: "#6b9e6b", textTransform: "uppercase", letterSpacing: ".1em", marginBottom: 10 }}>Completed</div>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(260px,1fr))", gap: 12 }}>
-            {completed.map(c => <CampaignCard key={c.id} c={c} />)}
+            {completed.map(c => <CampaignCard key={c.id} c={c} {...cardProps} />)}
           </div>
         </section>
       )}
