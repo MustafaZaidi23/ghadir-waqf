@@ -1,12 +1,29 @@
 @import "tailwindcss";
 
+/* ── Brand tokens (Ghadir Token brand guidelines) ───────────────────────── */
+:root {
+  --ghadir-green:   #0A3D2E;   /* primary background, hero          */
+  --divine-gold:    #D4AF37;   /* accents, CTA highlights, logo     */
+  --heritage-green: #2F884F;   /* buttons, links, secondary accent  */
+  --sanctity-cream: #F6F5E8;   /* light bg, cards (light mode)      */
+  --noble-charcoal: #1A1A1A;   /* text, borders                     */
+
+  /* Derived shades */
+  --green-deep:     #071f17;   /* darkest bg                        */
+  --green-mid:      #0d2b1e;   /* card backgrounds                  */
+  --green-border:   #163d28;   /* borders                           */
+  --green-muted:    #4a9e6b;   /* muted text on dark                */
+  --gold-muted:     #b8962e;   /* hover state for gold              */
+}
+
+/* ── Animations ─────────────────────────────────────────────────────────── */
 @keyframes coinBurst {
-  0%   { opacity: 1; transform: translateY(0)   scale(1);   }
+  0%   { opacity: 1; transform: translateY(0)    scale(1);   }
   100% { opacity: 0; transform: translateY(-50px) scale(1.4); }
 }
 @keyframes salawatPulse {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(82,183,136,0); }
-  50%       { box-shadow: 0 0 0 8px rgba(82,183,136,0.15); }
+  0%, 100% { box-shadow: 0 0 0 0 rgba(47,136,79,0); }
+  50%       { box-shadow: 0 0 0 10px rgba(47,136,79,0.18); }
 }
 @keyframes livePulse {
   0%, 100% { opacity: 1; }
@@ -16,58 +33,74 @@
   from { transform: scaleX(0); transform-origin: left; }
   to   { transform: scaleX(1); transform-origin: left; }
 }
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
+@keyframes spin     { to { transform: rotate(360deg); } }
 @keyframes slideDown {
   from { opacity: 0; transform: translateY(-8px); }
   to   { opacity: 1; transform: translateY(0); }
 }
 
+/* ── Base ────────────────────────────────────────────────────────────────── */
 @theme inline {
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
 body {
-  background: #0a0f0a;
-  color: #e8f5e8;
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--green-deep);
+  color: #e8f0e8;
+  font-family: 'Inter', Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
 }
 
+/* Headings use Cinzel (Trajan Pro equivalent per brand guidelines) */
+h1, h2, h3,
+.font-display {
+  font-family: 'Cinzel', 'Trajan Pro', Georgia, serif;
+  letter-spacing: 0.02em;
+}
+
+/* ── Components ─────────────────────────────────────────────────────────── */
 .card {
-  background: #111a11;
-  border: 1px solid #1e3a1e;
+  background: var(--green-mid);
+  border: 1px solid var(--green-border);
   border-radius: 12px;
   padding: 1.5rem;
 }
 
 .btn-primary {
-  background: #16a34a;
-  color: white;
+  background: var(--heritage-green);
+  color: #fff;
   padding: 0.625rem 1.5rem;
   border-radius: 8px;
   font-weight: 600;
+  font-family: 'Inter', sans-serif;
   transition: background 0.15s;
   cursor: pointer;
   border: none;
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
 }
-.btn-primary:hover:not(:disabled) { background: #15803d; }
+.btn-primary:hover:not(:disabled) { background: #247a3e; }
 .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
 
 .btn-gold {
-  background: #d97706;
-  color: white;
+  background: var(--divine-gold);
+  color: var(--ghadir-green);
   padding: 0.625rem 1.5rem;
   border-radius: 8px;
-  font-weight: 600;
+  font-weight: 700;
+  font-family: 'Inter', sans-serif;
   transition: background 0.15s;
   cursor: pointer;
   border: none;
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
 }
-.btn-gold:hover:not(:disabled) { background: #b45309; }
+.btn-gold:hover:not(:disabled) { background: var(--gold-muted); }
 .btn-gold:disabled { opacity: 0.5; cursor: not-allowed; }
 
 .btn-danger {
@@ -85,11 +118,13 @@ body {
 
 .input {
   width: 100%;
-  background: #0a0f0a;
-  border: 1px solid #1e3a1e;
+  background: var(--green-deep);
+  border: 1px solid var(--green-border);
   border-radius: 8px;
   padding: 0.5rem 0.75rem;
-  color: #e8f5e8;
+  color: #e8f0e8;
   font-size: 0.875rem;
+  font-family: 'Inter', sans-serif;
 }
-.input:focus { outline: none; border-color: #22c55e; }
+.input:focus { outline: none; border-color: var(--heritage-green); }
+select.input option { background: var(--green-mid); color: #e8f0e8; }

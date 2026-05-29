@@ -58,23 +58,26 @@ export function Nav() {
   return (
     <div ref={menuRef} className="sticky top-0 z-50">
       {/* ── Top bar ── */}
-      <nav className="border-b border-[#1e3a1e] bg-[#0a0f0a] h-14 flex items-center px-4">
+      <nav className="h-14 flex items-center px-4" style={{ background: "var(--ghadir-green)", borderBottom: "1px solid rgba(212,175,55,0.18)" }}>
         <div className="max-w-5xl mx-auto w-full flex items-center justify-between">
 
           {/* Logo */}
-          <Link href="/" className="text-[#22c55e] font-bold text-lg tracking-tight flex-shrink-0">
-            ☽ Ghadir Waqf
+          <Link href="/" style={{ textDecoration: "none", display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
+            <span style={{ fontFamily: "'Cinzel', serif", fontWeight: 700, fontSize: 17, color: "#D4AF37", letterSpacing: "0.05em" }}>GHADIR</span>
+            <span style={{ fontFamily: "'Inter', sans-serif", fontWeight: 300, fontSize: 11, color: "rgba(212,175,55,0.55)", letterSpacing: "0.18em", textTransform: "uppercase" }}>WAQF</span>
           </Link>
 
           {/* Desktop links */}
           <div className="hidden sm:flex items-center gap-5 mx-6 flex-1 justify-center">
             {navItems.map(item => (
               <Link key={item.href} href={item.href}
-                className={`text-sm transition-colors ${
-                  isActive(item.href)
-                    ? "text-[#22c55e] font-semibold"
-                    : "text-[#6b9e6b] hover:text-[#e8f5e8]"
-                }`}>
+                style={{
+                  fontSize: 13, fontFamily: "'Inter', sans-serif", fontWeight: isActive(item.href) ? 600 : 400,
+                  color: isActive(item.href) ? "#D4AF37" : "rgba(255,255,255,0.65)",
+                  textDecoration: "none", transition: "color .15s",
+                  borderBottom: isActive(item.href) ? "2px solid #D4AF37" : "2px solid transparent",
+                  paddingBottom: 2,
+                }}>
                 {t(item.key)}
               </Link>
             ))}
@@ -124,8 +127,9 @@ export function Nav() {
       {open && (
         <div style={{
           position: "absolute", top: "100%", left: 0, right: 0,
-          background: "#0a0f0a", borderBottom: "1px solid #1e3a1e",
-          boxShadow: "0 8px 32px rgba(0,0,0,0.6)",
+          background: "var(--ghadir-green)",
+          borderBottom: "1px solid rgba(212,175,55,0.2)",
+          boxShadow: "0 8px 32px rgba(0,0,0,0.7)",
           animation: "slideDown .18s ease",
         }}>
           <div style={{ maxWidth: 480, margin: "0 auto", padding: "8px 16px 12px" }}>
@@ -139,14 +143,15 @@ export function Nav() {
                     style={{
                       display: "flex", alignItems: "center", gap: 10,
                       padding: "11px 12px", borderRadius: 10, textDecoration: "none",
-                      background: active ? "#0d2b16" : "transparent",
-                      border: `1px solid ${active ? "#22c55e30" : "transparent"}`,
+                      background: active ? "rgba(212,175,55,0.12)" : "transparent",
+                      border: `1px solid ${active ? "rgba(212,175,55,0.3)" : "transparent"}`,
                       transition: "background .12s",
                     }}>
                     <span style={{ fontSize: 18, width: 24, textAlign: "center" }}>{item.icon}</span>
                     <span style={{
-                      fontSize: 13, fontWeight: active ? 600 : 400,
-                      color: active ? "#22c55e" : "#9ca3af",
+                      fontSize: 13, fontFamily: "'Inter', sans-serif",
+                      fontWeight: active ? 600 : 400,
+                      color: active ? "#D4AF37" : "rgba(255,255,255,0.55)",
                     }}>
                       {t(item.key)}
                     </span>
@@ -157,7 +162,7 @@ export function Nav() {
             </div>
 
             {/* Divider + auth */}
-            <div style={{ borderTop: "1px solid #1e3a1e", paddingTop: 10, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            <div style={{ borderTop: "1px solid rgba(212,175,55,0.15)", paddingTop: 10, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
               {address ? (
                 <>
                   <span style={{ fontSize: 11, color: "#374151", fontFamily: "monospace" }}>
