@@ -1,7 +1,7 @@
 {
   "name": "Ghadir Waqf",
   "short_name": "Ghadir",
-  "description": "The first permanent Islamic digital Waqf. Earn GHDR by sending Salawat. Donate as sadaqah.",
+  "description": "The first permanent Islamic digital Waqf. Earn GHDR by sending Salawat. Donate as hadiya.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
@@ -30,8 +30,8 @@
       "icons": [{ "src": "/icon-96.png", "sizes": "96x96" }]
     },
     {
-      "name": "Redeem Sadaqah",
-      "short_name": "Sadaqah",
+      "name": "Redeem Hadiya",
+      "short_name": "Hadiya",
       "description": "Donate GHDR tokens to verified charities",
       "url": "/redeem",
       "icons": [{ "src": "/icon-96.png", "sizes": "96x96" }]

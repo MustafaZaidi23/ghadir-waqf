@@ -21,7 +21,13 @@ export default function Leaderboard() {
   }, []);
 
   const displayName = (e: LeaderEntry) =>
-    e.username ? `@${e.username}` : e.first_name ?? "Anonymous";
+    e.username
+      ? `@${e.username}`
+      : e.first_name
+      ? e.first_name
+      : e.wallet_address
+      ? `${e.wallet_address.slice(0, 6)}…${e.wallet_address.slice(-4)}`
+      : "Anonymous";
 
   const shortWallet = (w: string | null) =>
     w ? `${w.slice(0, 6)}…${w.slice(-4)}` : "—";

@@ -28,6 +28,8 @@ const SALAWAT_ABI = parseAbi([
   "function balanceOf(address owner) view returns (uint256)",
   "function lifetimeSalawat(address) view returns (uint256)",
   "function multiplier() view returns (uint256)",
+  "function dailyMinted(address) view returns (uint256)",
+  "function dailyCap() view returns (uint256)",
 ]);
 
 // ─── Viem clients ─────────────────────────────────────────────────────────────
@@ -96,11 +98,11 @@ bot.command("start", async (ctx) => {
     `Assalamu Alaikum, ${name} 🌙\n\n` +
       `Welcome to Ghadir Waqf — the first permanent Islamic digital Waqf on Celo blockchain.\n\n` +
       `Every Salawat you send earns $GHDR tokens.\n` +
-      `Redeem them as sadaqah — verified, on-chain, permanent.\n\n` +
+      `Redeem them as hadiya — verified, on-chain, permanent.\n\n` +
       `Commands:\n` +
-      `/salawat — log a Salawat (earns 10 GHDR)\n` +
+      `/salawat — record a Salawat directly (earns 10 GHDR)\n` +
       `/balance — check your GHDR balance\n` +
-      `/redeem — donate GHDR as sadaqah\n` +
+      `/redeem — donate GHDR as hadiya\n` +
       `/wallet <address> — link your Celo wallet manually`,
     { reply_markup: keyboard }
   );
@@ -112,7 +114,7 @@ bot.callbackQuery("howto", async (ctx) => {
     `How Ghadir Waqf works:\n\n` +
       `1️⃣ Open the app and sign in (email, Google, or wallet)\n` +
       `2️⃣ Your Celo wallet is created automatically — no seed phrase\n` +
-      `3️⃣ Send /salawat here to earn 10 GHDR tokens per Salawat\n` +
+      `3️⃣ Send /salawat here — it logs directly on-chain and earns 10 GHDR\n` +
       `4️⃣ Go to Redeem, pick a verified charity, burn GHDR → donate USDC\n\n` +
       `The donation is on-chain, permanent, and goes directly to the charity's wallet.`,
     { reply_markup: new InlineKeyboard().webApp("🌐 Open App", APP_URL) }
@@ -149,11 +151,74 @@ bot.command("wallet", async (ctx) => {
 
 // /salawat ────────────────────────────────────────────────────────────────────
 bot.command("salawat", async (ctx) => {
-  const keyboard = new InlineKeyboard().webApp("🌙 Tap to Log Salawat", APP_URL);
-  await ctx.reply(
-    "اللَّهُمَّ صَلِّ عَلَى مُحَمَّدٍ وَآلِ مُحَمَّدٍ\n\nTap below to record your Salawat and earn GHDR:",
-    { reply_markup: keyboard }
-  );
+  const from = ctx.from!;
+  const telegramId = String(from.id);
+  const user = await getOrCreateUser(telegramId, from.username, from.first_name);
+
+  if (!user?.wallet_address) {
+    await ctx.reply(
+      "No wallet linked yet.\n\nOpen the app and sign in — your wallet will be linked automatically.",
+      { reply_markup: new InlineKeyboard().webApp("🌐 Open App", APP_URL) }
+    );
+    return;
+  }
+
+  // Pre-check daily cap and read multiplier in one round-trip
+  const [mintedRaw, capRaw, multiplierRaw] = await Promise.all([
+    publicClient.readContract({ address: SALAWAT_TOKEN, abi: SALAWAT_ABI, functionName: "dailyMinted", args: [user.wallet_address as `0x${string}`] }),
+    publicClient.readContract({ address: SALAWAT_TOKEN, abi: SALAWAT_ABI, functionName: "dailyCap" }),
+    publicClient.readContract({ address: SALAWAT_TOKEN, abi: SALAWAT_ABI, functionName: "multiplier" }),
+  ]);
+
+  if (BigInt(String(mintedRaw)) >= BigInt(String(capRaw))) {
+    await ctx.reply("Daily cap reached. Come back tomorrow! 🌙");
+    return;
+  }
+
+  const multiplierVal = Number(multiplierRaw);
+  const tokensEarned = (10 * multiplierVal) / 100;
+
+  // Reply immediately so the user sees instant feedback
+  const sent = await ctx.reply("اللَّهُمَّ صَلِّ عَلَى مُحَمَّدٍ وَآلِ مُحَمَّدٍ\n\n⏳ Recording Salawat…");
+
+  try {
+    const txHash = await walletClient.writeContract({
+      address: SALAWAT_TOKEN,
+      abi: SALAWAT_ABI,
+      functionName: "logSalawat",
+      args: [user.wallet_address as `0x${string}`, 1n],
+    });
+
+    await ctx.api.editMessageText(
+      ctx.chat!.id,
+      sent.message_id,
+      `اللَّهُمَّ صَلِّ عَلَى مُحَمَّدٍ وَآلِ مُحَمَّدٍ\n\n` +
+      `✅ Salawat recorded! +${tokensEarned} GHDR earned.\n\n` +
+      `Tx: https://celo-sepolia.blockscout.com/tx/${txHash}`
+    );
+
+    // Write to DB after on-chain confirmation (runs in background)
+    publicClient.waitForTransactionReceipt({ hash: txHash })
+      .then(() =>
+        supabase.from("salawat_logs").insert({
+          user_id: user.id,
+          count: 1,
+          tokens_earned: tokensEarned,
+          multiplier: multiplierVal / 100,
+          status: "confirmed",
+          tx_hash: txHash,
+        })
+      )
+      .catch(console.error);
+
+  } catch (err: any) {
+    const msg = String(err?.shortMessage ?? err?.message ?? err).slice(0, 150);
+    await ctx.api.editMessageText(
+      ctx.chat!.id,
+      sent.message_id,
+      `❌ Could not record Salawat.\n${msg}`
+    ).catch(() => {});
+  }
 });
 
 // /balance ────────────────────────────────────────────────────────────────────
@@ -292,6 +357,15 @@ createServer((_, res) => { res.writeHead(200); res.end("OK"); }).listen(PORT);
 
 // ─── Start ────────────────────────────────────────────────────────────────────
 await bot.api.deleteWebhook();
+
+// Register commands so they appear in Telegram's "/" suggestion menu
+await bot.api.setMyCommands([
+  { command: "start",   description: "Welcome message & open app" },
+  { command: "salawat", description: "Record a Salawat (earns 10 GHDR)" },
+  { command: "balance", description: "Check your GHDR balance" },
+  { command: "redeem",  description: "Donate GHDR as hadiya to a charity" },
+  { command: "wallet",  description: "Link or view your Celo wallet" },
+]);
 
 // Set persistent "Open App" button in the chat menu
 await bot.api.setChatMenuButton({

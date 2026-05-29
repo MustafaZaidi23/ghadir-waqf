@@ -14,8 +14,9 @@ import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 contract WaqfTreasury is AccessControl, ReentrancyGuard {
     using SafeERC20 for IERC20;
 
-    bytes32 public constant TRUSTEE_ROLE = keccak256("TRUSTEE_ROLE");
-    bytes32 public constant SCHOLAR_ROLE  = keccak256("SCHOLAR_ROLE");
+    bytes32 public constant TRUSTEE_ROLE      = keccak256("TRUSTEE_ROLE");
+    bytes32 public constant SCHOLAR_ROLE       = keccak256("SCHOLAR_ROLE");
+    bytes32 public constant HADIYA_CALLER_ROLE = keccak256("HADIYA_CALLER_ROLE");
 
     IERC20 public immutable usdc;
 
@@ -114,8 +115,8 @@ contract WaqfTreasury is AccessControl, ReentrancyGuard {
         emit FundsReleased(proposalId, p.charity, p.amount);
     }
 
-    // Called by SadaqahRedemption to release sadaqah directly to a charity
-    function releaseSadaqah(address charity, uint256 amount) external onlyRole(DEFAULT_ADMIN_ROLE) nonReentrant {
+    // Called by HadiyaRedemption to release hadiya directly to a charity
+    function releaseHadiya(address charity, uint256 amount) external onlyRole(HADIYA_CALLER_ROLE) nonReentrant {
         require(charity != address(0), "Invalid charity");
         require(amount > 0, "Amount must be > 0");
         uint256 balance = usdc.balanceOf(address(this));

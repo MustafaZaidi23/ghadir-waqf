@@ -5,7 +5,7 @@ import { formatUnits } from "viem";
 import { SALAWAT_TOKEN, SALAWAT_ABI, EXPLORER } from "@/lib/contracts";
 import Link from "next/link";
 import { useState, useEffect, useRef, useCallback } from "react";
-import { getTelegramWebApp, getTelegramUser } from "@/lib/telegram";
+import { getTelegramWebApp, getTelegramUser, isInTelegram } from "@/lib/telegram";
 
 interface RecentLog {
   id: string;
@@ -76,11 +76,10 @@ export default function Home() {
     setError(null);
 
     try {
-      const twa = getTelegramWebApp();
-      const body =
-        twa?.initData && twa.initData.length > 0
-          ? { init_data: twa.initData, count }
-          : { wallet_address: address, count };
+      // Always use wallet_address — Privy login is required to see the tap button,
+      // so address is always available. Telegram initData path requires a pre-linked
+      // wallet in the DB; using address directly avoids that dependency.
+      const body = { wallet_address: address, count };
 
       const res = await fetch("/api/salawat", {
         method: "POST",
@@ -147,6 +146,20 @@ export default function Home() {
   };
 
   const tgUser = getTelegramUser();
+  const inTelegram = isInTelegram();
+
+  // Auto-link Privy wallet to Telegram account on first connection
+  useEffect(() => {
+    if (!inTelegram || !address) return;
+    const twa = getTelegramWebApp();
+    if (!twa?.initData) return;
+    fetch("/api/link-wallet", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ initData: twa.initData, wallet_address: address }),
+    }).catch(() => {});
+  }, [address, inTelegram]);
+
   const ghdr = balance ? Number(formatUnits(balance as bigint, 18)) : 0;
   // Add optimistic balance: pending taps × 10 GHDR
   const displayGhdr = ghdr + pending * 10;
@@ -163,7 +176,7 @@ export default function Home() {
         <div>
           <h1 className="text-3xl font-bold text-[#22c55e] mb-3">Ghadir Waqf</h1>
           <p className="text-[#6b9e6b] max-w-sm mx-auto leading-relaxed">
-            Send Salawat. Earn GHDR. Donate as sadaqah —{" "}
+            Send Salawat. Earn GHDR. Donate as hadiya —{" "}
             <span className="text-[#e8f5e8]">on-chain, permanent.</span>
           </p>
         </div>
@@ -217,7 +230,7 @@ export default function Home() {
           )}
         </div>
         <div style={{ fontSize: 11, color: "rgba(255,255,255,0.3)", marginTop: 5, marginBottom: 18 }}>
-          ≈ ${(displayGhdr / 1000).toFixed(2)} sadaqah value · 1,000 GHDR = $1 USDC
+          ≈ ${(displayGhdr / 1000).toFixed(2)} hadiya value · 1,000 GHDR = $1 USDC
         </div>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
           <div style={{ background: "rgba(0,0,0,0.2)", borderRadius: 10, padding: "10px 12px" }}>
@@ -314,7 +327,7 @@ export default function Home() {
       {/* Quick actions */}
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
         {[
-          { href: "/redeem",      icon: "❤️", title: "Redeem Sadaqah",  sub: "Donate GHDR to charities" },
+          { href: "/redeem",      icon: "❤️", title: "Redeem Hadiya",   sub: "Donate GHDR to charities" },
           { href: "/leaderboard", icon: "🏅", title: "Leaderboard",     sub: "Top Salawat earners"       },
           { href: "/dashboard",   icon: "📊", title: "Dashboard",       sub: "Balance, history & stats"  },
         ].map((q) => (

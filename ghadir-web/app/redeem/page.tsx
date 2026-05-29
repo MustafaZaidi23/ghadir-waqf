@@ -2,7 +2,7 @@
 import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt } from "wagmi";
 import { usePrivy } from "@privy-io/react-auth";
 import { formatUnits, parseUnits } from "viem";
-import { SALAWAT_TOKEN, SADAQAH_REDEMPTION, SALAWAT_ABI, REDEMPTION_ABI, EXPLORER } from "@/lib/contracts";
+import { SALAWAT_TOKEN, HADIYA_REDEMPTION, SALAWAT_ABI, REDEMPTION_ABI, EXPLORER } from "@/lib/contracts";
 import { useState, useEffect } from "react";
 
 const TOKENS_PER_DOLLAR = 1000n;
@@ -36,7 +36,7 @@ export default function Redeem() {
   const { data: allowance, refetch: refetchAllowance } = useReadContract({
     address: SALAWAT_TOKEN, abi: SALAWAT_ABI,
     functionName: "allowance",
-    args: address ? [address, SADAQAH_REDEMPTION] : undefined,
+    args: address ? [address, HADIYA_REDEMPTION] : undefined,
     query: { enabled: !!address },
   });
 
@@ -62,7 +62,7 @@ export default function Redeem() {
     return (
       <div className="flex flex-col items-center justify-center gap-6 py-24 text-center">
         <div className="text-5xl">💚</div>
-        <h2 className="text-2xl font-bold text-[#e8f5e8]">Sign in to redeem sadaqah</h2>
+        <h2 className="text-2xl font-bold text-[#e8f5e8]">Sign in to redeem hadiya</h2>
         <p className="text-[#6b9e6b]">Use email, Google, or your Celo wallet — no seed phrase needed.</p>
         <button onClick={login} className="btn-primary px-6 py-2">Sign In</button>
       </div>
@@ -83,7 +83,7 @@ export default function Redeem() {
     writeContract({
       address: SALAWAT_TOKEN, abi: SALAWAT_ABI,
       functionName: "approve",
-      args: [SADAQAH_REDEMPTION, amountBN],
+      args: [HADIYA_REDEMPTION, amountBN],
     });
   };
 
@@ -91,8 +91,8 @@ export default function Redeem() {
     if (!selected || !amountBN) return;
     setStep("redeeming");
     writeContract({
-      address: SADAQAH_REDEMPTION, abi: REDEMPTION_ABI,
-      functionName: "redeemSadaqah",
+      address: HADIYA_REDEMPTION, abi: REDEMPTION_ABI,
+      functionName: "redeemHadiya",
       args: [amountBN, selected.wallet_address as `0x${string}`],
     });
   };
@@ -101,7 +101,7 @@ export default function Redeem() {
     return (
       <div className="flex flex-col items-center justify-center gap-6 py-24 text-center">
         <div className="text-6xl">✅</div>
-        <h2 className="text-2xl font-bold text-[#22c55e]">Sadaqah accepted!</h2>
+        <h2 className="text-2xl font-bold text-[#22c55e]">Hadiya accepted!</h2>
         <p className="text-[#6b9e6b]">
           {amount} GHDR burned → ${usdValue} USDC donated to {selected?.name}.
         </p>
@@ -120,7 +120,7 @@ export default function Redeem() {
 
   return (
     <div className="space-y-8 max-w-2xl mx-auto">
-      <h1 className="text-2xl font-bold text-[#e8f5e8]">Redeem Sadaqah</h1>
+      <h1 className="text-2xl font-bold text-[#e8f5e8]">Redeem Hadiya</h1>
 
       <div className="card flex justify-between items-center">
         <span className="text-[#6b9e6b] text-sm">Your balance</span>
@@ -206,7 +206,7 @@ export default function Redeem() {
                 onClick={handleRedeem}
                 disabled={isPending || step === "redeeming"}
               >
-                {step === "redeeming" && !txConfirmed ? "Redeeming…" : "Confirm Sadaqah"}
+                {step === "redeeming" && !txConfirmed ? "Redeeming…" : "Confirm Hadiya"}
               </button>
             )}
           </div>

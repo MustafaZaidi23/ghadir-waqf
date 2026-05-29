@@ -10,15 +10,15 @@ interface ISalawatToken is IERC20 {
 }
 
 interface IWaqfTreasury {
-    function releaseSadaqah(address charity, uint256 amount) external;
+    function releaseHadiya(address charity, uint256 amount) external;
 }
 
 /**
- * @title SadaqahRedemption
+ * @title HadiyaRedemption
  * @notice Burns GHDR tokens and releases equivalent USDC to a verified charity.
  *         Rate: TOKENS_PER_DOLLAR GHDR = 1 USDC (6 decimals).
  */
-contract SadaqahRedemption is Ownable, ReentrancyGuard {
+contract HadiyaRedemption is Ownable, ReentrancyGuard {
 
     ISalawatToken public immutable salawatToken;
     IWaqfTreasury public immutable waqfTreasury;
@@ -30,7 +30,7 @@ contract SadaqahRedemption is Ownable, ReentrancyGuard {
 
     mapping(address => bool) public verifiedCharities;
 
-    event SadaqahRedeemed(
+    event HadiyaRedeemed(
         address indexed user,
         address indexed charity,
         uint256 tokensBurned,
@@ -52,11 +52,11 @@ contract SadaqahRedemption is Ownable, ReentrancyGuard {
     }
 
     /**
-     * @notice Redeem GHDR tokens as sadaqah. Burns tokens and releases USDC to charity.
+     * @notice Redeem GHDR tokens as hadiya. Burns tokens and releases USDC to charity.
      * @param tokenAmount Amount of GHDR to burn (must be a multiple of TOKENS_PER_DOLLAR)
      * @param charity Verified charity wallet to receive USDC
      */
-    function redeemSadaqah(uint256 tokenAmount, address charity) external nonReentrant {
+    function redeemHadiya(uint256 tokenAmount, address charity) external nonReentrant {
         require(verifiedCharities[charity], "Charity not verified");
         require(tokenAmount >= TOKENS_PER_DOLLAR, "Minimum 1000 GHDR");
         require(tokenAmount % TOKENS_PER_DOLLAR == 0, "Must be multiple of 1000 GHDR");
@@ -68,9 +68,9 @@ contract SadaqahRedemption is Ownable, ReentrancyGuard {
         salawatToken.burn(tokenAmount);
 
         // Release equivalent USDC from treasury to charity
-        waqfTreasury.releaseSadaqah(charity, usdcAmount);
+        waqfTreasury.releaseHadiya(charity, usdcAmount);
 
-        emit SadaqahRedeemed(msg.sender, charity, tokenAmount, usdcAmount);
+        emit HadiyaRedeemed(msg.sender, charity, tokenAmount, usdcAmount);
     }
 
     function usdcValueOf(uint256 tokenAmount) external pure returns (uint256) {

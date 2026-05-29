@@ -18,7 +18,7 @@ export const viewport: Viewport = {
 
 export const metadata: Metadata = {
   title: "Ghadir Waqf",
-  description: "The first permanent Islamic digital Waqf. Earn GHDR by sending Salawat. Donate as sadaqah.",
+  description: "The first permanent Islamic digital Waqf. Earn GHDR by sending Salawat. Donate as hadiya.",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,

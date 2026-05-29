@@ -74,6 +74,15 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Invalid wallet address" }, { status: 400 });
     }
     walletAddress = body.wallet_address;
+    // Auto-create user record so this wallet appears on the leaderboard
+    const { data: existing } = await supabase
+      .from("users")
+      .select("id")
+      .eq("wallet_address", walletAddress)
+      .single();
+    if (!existing) {
+      await supabase.from("users").insert({ wallet_address: walletAddress });
+    }
   } else {
     return NextResponse.json({ error: "Provide init_data or wallet_address" }, { status: 400 });
   }

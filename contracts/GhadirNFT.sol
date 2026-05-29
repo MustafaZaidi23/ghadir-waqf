@@ -8,13 +8,13 @@ import "@openzeppelin/contracts/access/AccessControl.sol";
 /**
  * @title GhadirNFT
  * @notice Soulbound ERC-721 certificates — non-transferable after mint.
- *         Types: GhadeerDay, WaqfFounder, SadaqahPioneer, Arbaeen, CommunityBuilder
+ *         Types: GhadeerDay, WaqfFounder, HadiyaPioneer, Arbaeen, CommunityBuilder
  */
 contract GhadirNFT is ERC721, ERC721URIStorage, AccessControl {
 
     bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
 
-    enum CertType { GhadeerDay, WaqfFounder, SadaqahPioneer, Arbaeen, CommunityBuilder }
+    enum CertType { GhadeerDay, WaqfFounder, HadiyaPioneer, Arbaeen, CommunityBuilder }
 
     uint256 private _nextTokenId;
 
