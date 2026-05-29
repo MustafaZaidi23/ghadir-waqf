@@ -6,6 +6,7 @@ import { SALAWAT_TOKEN, SALAWAT_ABI, EXPLORER } from "@/lib/contracts";
 import Link from "next/link";
 import { useState, useEffect, useRef, useCallback } from "react";
 import { getTelegramWebApp, getTelegramUser, isInTelegram } from "@/lib/telegram";
+import { fetchPublicCampaigns, Campaign } from "./admin/actions";
 
 interface RecentLog {
   id: string;
@@ -35,6 +36,7 @@ export default function Home() {
   const [lastResult, setLastResult] = useState<{ tokens: number; tx: string; count: number } | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [bursts, setBursts] = useState<Burst[]>([]);
+  const [activeCampaign, setActiveCampaign] = useState<Campaign | null>(null);
 
   const { data: balance, refetch: refetchBalance } = useReadContract({
     address: SALAWAT_TOKEN, abi: SALAWAT_ABI,
@@ -65,6 +67,12 @@ export default function Home() {
   useEffect(() => {
     if (address) reloadLogs(address);
   }, [address, reloadLogs]);
+
+  useEffect(() => {
+    fetchPublicCampaigns()
+      .then((list) => setActiveCampaign(list.find((c) => c.status === "active") ?? null))
+      .catch(() => {});
+  }, []);
 
   // Cleanup debounce on unmount
   useEffect(() => () => { if (debounceRef.current) clearTimeout(debounceRef.current); }, []);
@@ -249,6 +257,31 @@ export default function Home() {
         </div>
       </div>
 
+      {/* Active campaign banner */}
+      {activeCampaign && (
+        <Link href="/campaigns"
+          style={{
+            display: "block", textDecoration: "none",
+            background: "linear-gradient(90deg, rgba(167,139,250,0.1), rgba(34,197,94,0.08))",
+            border: "1px solid rgba(167,139,250,0.25)",
+            borderRadius: 12, padding: "10px 14px",
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <span style={{ fontSize: 16 }}>✨</span>
+              <div>
+                <div style={{ fontSize: 12, fontWeight: 600, color: "#e8f5e8" }}>{activeCampaign.name}</div>
+                <div style={{ fontSize: 10, color: "#a78bfa", marginTop: 1 }}>
+                  Active campaign · Tap to learn more
+                </div>
+              </div>
+            </div>
+            <span style={{ fontSize: 11, color: "#a78bfa" }}>→</span>
+          </div>
+        </Link>
+      )}
+
       {/* Salawat tap button */}
       <button
         onClick={handleTap}
@@ -328,6 +361,7 @@ export default function Home() {
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
         {[
           { href: "/redeem",      icon: "❤️", title: "Redeem Hadiya",   sub: "Donate GHDR to charities" },
+          { href: "/campaigns",   icon: "📢", title: "Campaigns",       sub: "Active drives & events"    },
           { href: "/leaderboard", icon: "🏅", title: "Leaderboard",     sub: "Top Salawat earners"       },
           { href: "/dashboard",   icon: "📊", title: "Dashboard",       sub: "Balance, history & stats"  },
         ].map((q) => (

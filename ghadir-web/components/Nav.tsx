@@ -3,14 +3,16 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { usePrivy } from "@privy-io/react-auth";
 import { useAccount } from "wagmi";
+import { useEffect, useState } from "react";
 
-const ADMIN = process.env.NEXT_PUBLIC_ADMIN_ADDRESS?.toLowerCase();
+const SUPER_ADMIN = process.env.NEXT_PUBLIC_ADMIN_ADDRESS?.toLowerCase();
 
 const links = [
-  { href: "/",             label: "Home" },
-  { href: "/dashboard",   label: "Dashboard" },
-  { href: "/redeem",      label: "Redeem" },
-  { href: "/leaderboard", label: "Leaderboard" },
+  { href: "/",            label: "Home" },
+  { href: "/dashboard",  label: "Dashboard" },
+  { href: "/redeem",     label: "Redeem" },
+  { href: "/campaigns",  label: "Campaigns" },
+  { href: "/leaderboard",label: "Leaderboard" },
 ];
 
 function WalletButton() {
@@ -43,13 +45,24 @@ function WalletButton() {
 }
 
 function AdminLink({ path }: { path: string }) {
-  const { address } = useAccount();
-  if (!ADMIN || address?.toLowerCase() !== ADMIN) return null;
+  const { address, isConnected } = useAccount();
+  const [hasAccess, setHasAccess] = useState(false);
+
+  useEffect(() => {
+    if (!isConnected || !address) { setHasAccess(false); return; }
+    if (address.toLowerCase() === SUPER_ADMIN) { setHasAccess(true); return; }
+    fetch(`/api/my-role?wallet=${address}`)
+      .then((r) => r.json())
+      .then((d) => setHasAccess(!!d.role))
+      .catch(() => setHasAccess(false));
+  }, [address, isConnected]);
+
+  if (!hasAccess) return null;
   return (
     <Link
       href="/admin"
       className={`text-sm transition-colors ${
-        path === "/admin"
+        path.startsWith("/admin")
           ? "text-[#f59e0b] font-semibold"
           : "text-[#6b9e6b] hover:text-[#f59e0b]"
       }`}

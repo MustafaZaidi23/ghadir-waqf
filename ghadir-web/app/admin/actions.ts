@@ -194,6 +194,17 @@ export async function fetchCampaigns(): Promise<Campaign[]> {
   return data ?? [];
 }
 
+export async function fetchPublicCampaigns(): Promise<Campaign[]> {
+  const { data, error } = await supabase
+    .from("campaigns")
+    .select("*")
+    .neq("status", "draft")
+    .neq("status", "cancelled")
+    .order("created_at", { ascending: false });
+  if (error) throw new Error(error.message);
+  return data ?? [];
+}
+
 export async function upsertCampaign(campaign: Campaign) {
   const { id, ...rest } = campaign;
   const payload = { ...rest, updated_at: new Date().toISOString() };
