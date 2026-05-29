@@ -3,106 +3,182 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { usePrivy } from "@privy-io/react-auth";
 import { useAccount } from "wagmi";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useLanguage } from "@/lib/i18n";
 
 const SUPER_ADMIN = process.env.NEXT_PUBLIC_ADMIN_ADDRESS?.toLowerCase();
 
-function WalletButton() {
-  const { login, logout, authenticated, ready } = usePrivy();
-  const { address } = useAccount();
-
-  if (!ready) return <div className="w-24 h-8 bg-[#1e3a1e] rounded-lg animate-pulse" />;
-
-  if (authenticated && address) {
-    return (
-      <div className="flex items-center gap-2">
-        <span className="text-[#6b9e6b] text-xs font-mono hidden sm:block">
-          {address.slice(0, 6)}…{address.slice(-4)}
-        </span>
-        <button
-          onClick={logout}
-          className="text-xs border border-[#1e3a1e] text-[#6b9e6b] hover:text-[#f87171] rounded-lg px-3 py-1.5 transition-colors"
-        >
-          Disconnect
-        </button>
-      </div>
-    );
-  }
-
-  return (
-    <button onClick={login} className="btn-primary text-sm px-4 py-1.5">
-      Sign In
-    </button>
-  );
-}
-
-function AdminLink({ path }: { path: string }) {
-  const { address, isConnected } = useAccount();
-  const [hasAccess, setHasAccess] = useState(false);
-
-  useEffect(() => {
-    if (!isConnected || !address) { setHasAccess(false); return; }
-    if (address.toLowerCase() === SUPER_ADMIN) { setHasAccess(true); return; }
-    fetch(`/api/my-role?wallet=${address}`)
-      .then((r) => r.json())
-      .then((d) => setHasAccess(!!d.role))
-      .catch(() => setHasAccess(false));
-  }, [address, isConnected]);
-
-  if (!hasAccess) return null;
-  return (
-    <Link
-      href="/admin"
-      className={`text-sm transition-colors ${
-        path.startsWith("/admin")
-          ? "text-[#f59e0b] font-semibold"
-          : "text-[#6b9e6b] hover:text-[#f59e0b]"
-      }`}
-    >
-      Admin
-    </Link>
-  );
-}
+const NAV_ITEMS = [
+  { href: "/",            icon: "🏠", key: "home"        },
+  { href: "/dashboard",   icon: "👤", key: "profile"     },
+  { href: "/redeem",      icon: "❤️", key: "hadiya"      },
+  { href: "/campaigns",   icon: "🕌", key: "campaigns"   },
+  { href: "/shura",       icon: "⚖️", key: "shura"       },
+  { href: "/leaderboard", icon: "🏅", key: "leaderboard" },
+];
 
 export function Nav() {
-  const path = usePathname();
-  const { t } = useLanguage();
+  const path                    = usePathname();
+  const { t }                   = useLanguage();
+  const { login, logout, authenticated, ready } = usePrivy();
+  const { address, isConnected } = useAccount();
+  const [open, setOpen]         = useState(false);
+  const [isAdmin, setIsAdmin]   = useState(false);
+  const menuRef                 = useRef<HTMLDivElement>(null);
 
-  const links = [
-    { href: "/",             label: t("home")      },
-    { href: "/dashboard",    label: t("profile")   },
-    { href: "/redeem",       label: t("hadiya")    },
-    { href: "/campaigns",    label: t("campaigns") },
-    { href: "/leaderboard",  label: t("leaderboard") },
+  // Admin access check
+  useEffect(() => {
+    if (!isConnected || !address) { setIsAdmin(false); return; }
+    if (address.toLowerCase() === SUPER_ADMIN) { setIsAdmin(true); return; }
+    fetch(`/api/my-role?wallet=${address}`)
+      .then(r => r.json())
+      .then(d => setIsAdmin(!!d.role))
+      .catch(() => setIsAdmin(false));
+  }, [address, isConnected]);
+
+  // Close on outside click
+  useEffect(() => {
+    if (!open) return;
+    const handle = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener("mousedown", handle);
+    return () => document.removeEventListener("mousedown", handle);
+  }, [open]);
+
+  // Close on route change
+  useEffect(() => { setOpen(false); }, [path]);
+
+  const navItems = [
+    ...NAV_ITEMS,
+    ...(isAdmin ? [{ href: "/admin", icon: "⚙️", key: "admin" }] : []),
   ];
 
+  const isActive = (href: string) => href === "/" ? path === "/" : path.startsWith(href);
+
   return (
-    <nav className="border-b border-[#1e3a1e] bg-[#0a0f0a] sticky top-0 z-50">
-      <div className="max-w-5xl mx-auto px-4 h-16 flex items-center justify-between">
-        <div className="flex items-center gap-6">
-          <Link href="/" className="text-[#22c55e] font-bold text-lg tracking-tight">
+    <div ref={menuRef} className="sticky top-0 z-50">
+      {/* ── Top bar ── */}
+      <nav className="border-b border-[#1e3a1e] bg-[#0a0f0a] h-14 flex items-center px-4">
+        <div className="max-w-5xl mx-auto w-full flex items-center justify-between">
+
+          {/* Logo */}
+          <Link href="/" className="text-[#22c55e] font-bold text-lg tracking-tight flex-shrink-0">
             ☽ Ghadir Waqf
           </Link>
-          <div className="hidden sm:flex gap-4">
-            {links.map((l) => (
-              <Link
-                key={l.href}
-                href={l.href}
+
+          {/* Desktop links */}
+          <div className="hidden sm:flex items-center gap-5 mx-6 flex-1 justify-center">
+            {navItems.map(item => (
+              <Link key={item.href} href={item.href}
                 className={`text-sm transition-colors ${
-                  path === l.href
+                  isActive(item.href)
                     ? "text-[#22c55e] font-semibold"
                     : "text-[#6b9e6b] hover:text-[#e8f5e8]"
-                }`}
-              >
-                {l.label}
+                }`}>
+                {t(item.key)}
               </Link>
             ))}
-            <AdminLink path={path} />
+          </div>
+
+          {/* Right side: wallet + three-dot */}
+          <div className="flex items-center gap-2 flex-shrink-0">
+            {/* Wallet button */}
+            {!ready ? (
+              <div className="w-20 h-7 bg-[#1e3a1e] rounded-lg animate-pulse" />
+            ) : authenticated && address ? (
+              <span className="text-[#6b9e6b] text-xs font-mono hidden sm:block">
+                {address.slice(0, 6)}…{address.slice(-4)}
+              </span>
+            ) : (
+              <button onClick={login} className="btn-primary text-xs px-3 py-1.5 hidden sm:flex">
+                {t("sign_in")}
+              </button>
+            )}
+
+            {/* Three-dot button — always visible */}
+            <button
+              onClick={() => setOpen(o => !o)}
+              aria-label="Menu"
+              style={{
+                width: 36, height: 36, borderRadius: 9,
+                background: open ? "#0d2b16" : "transparent",
+                border: `1px solid ${open ? "#22c55e40" : "#1e3a1e"}`,
+                display: "flex", flexDirection: "column",
+                alignItems: "center", justifyContent: "center",
+                gap: 4, cursor: "pointer", transition: "all .15s", flexShrink: 0,
+              }}
+            >
+              {[0, 1, 2].map(i => (
+                <span key={i} style={{
+                  width: 4, height: 4, borderRadius: "50%",
+                  background: open ? "#22c55e" : "#6b9e6b",
+                  transition: "background .15s",
+                }} />
+              ))}
+            </button>
           </div>
         </div>
-        <WalletButton />
-      </div>
-    </nav>
+      </nav>
+
+      {/* ── Dropdown menu ── */}
+      {open && (
+        <div style={{
+          position: "absolute", top: "100%", left: 0, right: 0,
+          background: "#0a0f0a", borderBottom: "1px solid #1e3a1e",
+          boxShadow: "0 8px 32px rgba(0,0,0,0.6)",
+          animation: "slideDown .18s ease",
+        }}>
+          <div style={{ maxWidth: 480, margin: "0 auto", padding: "8px 16px 12px" }}>
+
+            {/* Nav links */}
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 4, marginBottom: 12 }}>
+              {navItems.map(item => {
+                const active = isActive(item.href);
+                return (
+                  <Link key={item.href} href={item.href}
+                    style={{
+                      display: "flex", alignItems: "center", gap: 10,
+                      padding: "11px 12px", borderRadius: 10, textDecoration: "none",
+                      background: active ? "#0d2b16" : "transparent",
+                      border: `1px solid ${active ? "#22c55e30" : "transparent"}`,
+                      transition: "background .12s",
+                    }}>
+                    <span style={{ fontSize: 18, width: 24, textAlign: "center" }}>{item.icon}</span>
+                    <span style={{
+                      fontSize: 13, fontWeight: active ? 600 : 400,
+                      color: active ? "#22c55e" : "#9ca3af",
+                    }}>
+                      {t(item.key)}
+                    </span>
+                    {active && <span style={{ marginLeft: "auto", width: 6, height: 6, borderRadius: "50%", background: "#22c55e", flexShrink: 0 }} />}
+                  </Link>
+                );
+              })}
+            </div>
+
+            {/* Divider + auth */}
+            <div style={{ borderTop: "1px solid #1e3a1e", paddingTop: 10, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              {address ? (
+                <>
+                  <span style={{ fontSize: 11, color: "#374151", fontFamily: "monospace" }}>
+                    {address.slice(0, 8)}…{address.slice(-6)}
+                  </span>
+                  <button onClick={() => { logout(); setOpen(false); }}
+                    style={{ fontSize: 12, color: "#f87171", background: "#7f1d1d20", border: "1px solid #7f1d1d40", borderRadius: 8, padding: "5px 12px", cursor: "pointer" }}>
+                    {t("sign_out")}
+                  </button>
+                </>
+              ) : (
+                <button onClick={() => { login(); setOpen(false); }}
+                  className="btn-primary w-full" style={{ fontSize: 13, justifyContent: "center" }}>
+                  {t("sign_in")}
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
   );
 }
