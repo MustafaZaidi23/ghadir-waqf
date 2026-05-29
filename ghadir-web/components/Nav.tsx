@@ -4,16 +4,9 @@ import { usePathname } from "next/navigation";
 import { usePrivy } from "@privy-io/react-auth";
 import { useAccount } from "wagmi";
 import { useEffect, useState } from "react";
+import { useLanguage } from "@/lib/i18n";
 
 const SUPER_ADMIN = process.env.NEXT_PUBLIC_ADMIN_ADDRESS?.toLowerCase();
-
-const links = [
-  { href: "/",            label: "Home" },
-  { href: "/dashboard",  label: "Dashboard" },
-  { href: "/redeem",     label: "Redeem" },
-  { href: "/campaigns",  label: "Campaigns" },
-  { href: "/leaderboard",label: "Leaderboard" },
-];
 
 function WalletButton() {
   const { login, logout, authenticated, ready } = usePrivy();
@@ -74,6 +67,16 @@ function AdminLink({ path }: { path: string }) {
 
 export function Nav() {
   const path = usePathname();
+  const { t } = useLanguage();
+
+  const links = [
+    { href: "/",             label: t("home")      },
+    { href: "/dashboard",    label: t("profile")   },
+    { href: "/redeem",       label: t("hadiya")    },
+    { href: "/campaigns",    label: t("campaigns") },
+    { href: "/leaderboard",  label: t("leaderboard") },
+  ];
+
   return (
     <nav className="border-b border-[#1e3a1e] bg-[#0a0f0a] sticky top-0 z-50">
       <div className="max-w-5xl mx-auto px-4 h-16 flex items-center justify-between">

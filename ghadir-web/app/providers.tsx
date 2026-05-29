@@ -6,6 +6,7 @@ import { wagmiConfig } from "@/lib/wagmiConfig";
 import { celoSepolia } from "@/lib/chain";
 import { useEffect } from "react";
 import { getTelegramWebApp } from "@/lib/telegram";
+import { LanguageProvider } from "@/lib/i18n";
 
 const queryClient = new QueryClient();
 
@@ -39,7 +40,9 @@ export function Providers({ children }: { children: React.ReactNode }) {
       <QueryClientProvider client={queryClient}>
         <WagmiProvider config={wagmiConfig}>
           <TelegramInit />
-          {children}
+          <LanguageProvider>
+            {children}
+          </LanguageProvider>
         </WagmiProvider>
       </QueryClientProvider>
     </PrivyProvider>

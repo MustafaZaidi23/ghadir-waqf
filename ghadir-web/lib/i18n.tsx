@@ -1,0 +1,333 @@
+"use client";
+import { createContext, useContext, useEffect, useState } from "react";
+
+export type Lang = "en" | "ar" | "fa" | "ur";
+export const RTL_LANGS: Lang[] = ["ar", "fa", "ur"];
+
+export const LANG_META: Record<Lang, { label: string; nativeLabel: string; flag: string; font: string }> = {
+  en: { label: "English",  nativeLabel: "English",  flag: "🇬🇧", font: "'DM Sans', sans-serif" },
+  ar: { label: "Arabic",   nativeLabel: "العربية",  flag: "🇸🇦", font: "'Noto Naskh Arabic', sans-serif" },
+  fa: { label: "Farsi",    nativeLabel: "فارسی",    flag: "🇮🇷", font: "'Noto Naskh Arabic', sans-serif" },
+  ur: { label: "Urdu",     nativeLabel: "اردو",     flag: "🇵🇰", font: "'Noto Nastaliq Urdu', serif" },
+};
+
+type T = Record<string, string>;
+
+const en: T = {
+  // Nav
+  home: "Home", hadiya: "Hadiya", campaigns: "Campaigns", shura: "Shura",
+  profile: "Profile", admin: "Admin",
+  // Auth
+  sign_in: "Sign In", sign_out: "Sign Out", get_started: "Get Started",
+  // Common
+  loading: "Loading…", verified: "✓ Verified", days_left: "days left",
+  ends_today: "Ends today!", raised: "raised", goal: "Goal", live: "Live",
+  // Home
+  assalamu_alaikum: "Assalamu Alaikum",
+  balance_label: "Your GHDR Balance",
+  daily_cap: "Daily cap used",
+  this_session: "This session",
+  tap_to_log: "Tap to log Salawat",
+  per_tap: "GHDR each",
+  recording: "Recording on-chain…",
+  tapped: "tapped",
+  recording_in: "recording in",
+  submit_now: "Record now →",
+  daily_cap_reached: "Daily cap reached · Come back tomorrow",
+  recent_activity: "Recent activity",
+  quick_actions: "Quick actions",
+  join_majlis: "Join Majlis",
+  events_drives: "Events & drives",
+  shura_council: "Shura Council",
+  vote_on_proposals: "Vote on proposals",
+  top_earners: "Top Salawat earners",
+  redeem_hadiya: "Redeem Hadiya",
+  donate_ghdr: "Donate GHDR to a cause",
+  // Dashboard
+  your_profile: "Your Profile",
+  lifetime_salawat: "Salawat",
+  ghdr_balance: "GHDR",
+  daily_used: "Daily",
+  this_week: "This week",
+  nft_certs: "NFT Certificates",
+  my_campaigns: "My Campaigns",
+  no_campaigns: "You haven't joined any campaigns yet.",
+  view_campaigns: "View active campaigns →",
+  salawat_history: "Salawat History",
+  connected_wallet: "Connected wallet",
+  on_chain_activity: "On-chain activity",
+  view_transactions: "View all transactions",
+  settings: "Settings",
+  leaderboard: "Leaderboard",
+  language: "Language",
+  // Campaigns
+  campaigns_title: "Campaigns",
+  live_now: "Live now",
+  coming_soon: "Coming soon",
+  completed_label: "Completed",
+  join_campaign: "Join Campaign",
+  joined_label: "✓ Joined",
+  joining_label: "Joining…",
+  sign_in_to_join: "Sign in to join",
+  participants_label: "participants",
+  participating: "participating",
+  browse_all: "Browse all →",
+  // Hadiya / Redeem
+  hadiya_title: "Hadiya",
+  choose_cause: "Choose a cause",
+  select_amount: "Select amount",
+  approve_btn: "Step 1: Approve GHDR",
+  approving: "Approving…",
+  confirm_donate: "Confirm — burn & donate",
+  confirming: "Confirming…",
+  insufficient: "Insufficient GHDR balance",
+  hadiya_accepted: "Hadiya accepted!",
+  give_again: "Give again",
+};
+
+const ar: T = {
+  home: "الرئيسية", hadiya: "هدية", campaigns: "الحملات", shura: "الشورى",
+  profile: "الملف", admin: "الإدارة",
+  sign_in: "تسجيل الدخول", sign_out: "تسجيل الخروج", get_started: "ابدأ الآن",
+  loading: "جارٍ التحميل…", verified: "✓ موثّق", days_left: "أيام متبقية",
+  ends_today: "ينتهي اليوم!", raised: "تم جمع", goal: "الهدف", live: "مباشر",
+  assalamu_alaikum: "السلام عليكم",
+  balance_label: "رصيد GHDR",
+  daily_cap: "الحد اليومي المستخدم",
+  this_session: "هذه الجلسة",
+  tap_to_log: "اضغط لتسجيل الصلاة",
+  per_tap: "GHDR لكل ضغطة",
+  recording: "جارٍ التسجيل على السلسلة…",
+  tapped: "صلاة",
+  recording_in: "التسجيل خلال",
+  submit_now: "سجّل الآن →",
+  daily_cap_reached: "تم الوصول للحد اليومي · عُد غداً",
+  recent_activity: "النشاط الأخير",
+  quick_actions: "إجراءات سريعة",
+  join_majlis: "انضم للمجلس",
+  events_drives: "الفعاليات والحملات",
+  shura_council: "مجلس الشورى",
+  vote_on_proposals: "صوّت على المقترحات",
+  top_earners: "أكثر المصلّين",
+  redeem_hadiya: "استرداد الهدية",
+  donate_ghdr: "تبرع بـ GHDR لقضية",
+  your_profile: "ملفك الشخصي",
+  lifetime_salawat: "الصلوات",
+  ghdr_balance: "GHDR",
+  daily_used: "اليوم",
+  this_week: "هذا الأسبوع",
+  nft_certs: "شهادات NFT",
+  my_campaigns: "حملاتي",
+  no_campaigns: "لم تنضم لأي حملة بعد.",
+  view_campaigns: "عرض الحملات النشطة →",
+  salawat_history: "سجل الصلوات",
+  connected_wallet: "المحفظة المتصلة",
+  on_chain_activity: "النشاط على السلسلة",
+  view_transactions: "عرض جميع المعاملات",
+  settings: "الإعدادات",
+  leaderboard: "لوحة الشرف",
+  language: "اللغة",
+  campaigns_title: "الحملات",
+  live_now: "مباشر الآن",
+  coming_soon: "قريباً",
+  completed_label: "مكتمل",
+  join_campaign: "انضم للحملة",
+  joined_label: "✓ منضم",
+  joining_label: "جارٍ الانضمام…",
+  sign_in_to_join: "سجّل الدخول للانضمام",
+  participants_label: "مشارك",
+  participating: "يشاركون",
+  browse_all: "عرض الكل →",
+  hadiya_title: "هدية",
+  choose_cause: "اختر قضية",
+  select_amount: "اختر المبلغ",
+  approve_btn: "الخطوة ١: الموافقة على GHDR",
+  approving: "جارٍ الموافقة…",
+  confirm_donate: "تأكيد — حرق وتبرع",
+  confirming: "جارٍ التأكيد…",
+  insufficient: "رصيد GHDR غير كافٍ",
+  hadiya_accepted: "تم قبول الهدية!",
+  give_again: "تبرع مرة أخرى",
+};
+
+const fa: T = {
+  home: "خانه", hadiya: "هدیه", campaigns: "کمپین‌ها", shura: "شورا",
+  profile: "پروفایل", admin: "مدیریت",
+  sign_in: "ورود", sign_out: "خروج", get_started: "شروع کنید",
+  loading: "در حال بارگذاری…", verified: "✓ تأیید شده", days_left: "روز مانده",
+  ends_today: "امروز پایان می‌یابد!", raised: "جمع‌آوری شده", goal: "هدف", live: "زنده",
+  assalamu_alaikum: "السلام علیکم",
+  balance_label: "موجودی GHDR",
+  daily_cap: "سقف روزانه مصرف شده",
+  this_session: "این جلسه",
+  tap_to_log: "برای ثبت صلوات ضربه بزنید",
+  per_tap: "GHDR هر ضربه",
+  recording: "در حال ثبت در بلاک‌چین…",
+  tapped: "صلوات",
+  recording_in: "ثبت در",
+  submit_now: "همین حالا ثبت کن →",
+  daily_cap_reached: "سقف روزانه تمام شد · فردا برگردید",
+  recent_activity: "فعالیت اخیر",
+  quick_actions: "اقدامات سریع",
+  join_majlis: "پیوستن به مجلس",
+  events_drives: "رویدادها و کمپین‌ها",
+  shura_council: "شورای مشورتی",
+  vote_on_proposals: "رأی دادن به پیشنهادات",
+  top_earners: "برترین ذاکران",
+  redeem_hadiya: "بازخرید هدیه",
+  donate_ghdr: "کمک مالی GHDR به یک هدف",
+  your_profile: "پروفایل شما",
+  lifetime_salawat: "صلوات",
+  ghdr_balance: "GHDR",
+  daily_used: "امروز",
+  this_week: "این هفته",
+  nft_certs: "گواهی‌های NFT",
+  my_campaigns: "کمپین‌های من",
+  no_campaigns: "هنوز به هیچ کمپینی نپیوستید.",
+  view_campaigns: "مشاهده کمپین‌های فعال →",
+  salawat_history: "تاریخچه صلوات",
+  connected_wallet: "کیف پول متصل",
+  on_chain_activity: "فعالیت روی بلاک‌چین",
+  view_transactions: "مشاهده همه تراکنش‌ها",
+  settings: "تنظیمات",
+  leaderboard: "جدول برترین‌ها",
+  language: "زبان",
+  campaigns_title: "کمپین‌ها",
+  live_now: "در حال اجرا",
+  coming_soon: "به زودی",
+  completed_label: "کامل شده",
+  join_campaign: "پیوستن به کمپین",
+  joined_label: "✓ پیوستید",
+  joining_label: "در حال پیوستن…",
+  sign_in_to_join: "برای پیوستن وارد شوید",
+  participants_label: "شرکت‌کننده",
+  participating: "شرکت می‌کنند",
+  browse_all: "مشاهده همه →",
+  hadiya_title: "هدیه",
+  choose_cause: "یک هدف انتخاب کنید",
+  select_amount: "مقدار را انتخاب کنید",
+  approve_btn: "مرحله ۱: تأیید GHDR",
+  approving: "در حال تأیید…",
+  confirm_donate: "تأیید — سوزاندن و کمک",
+  confirming: "در حال تأیید…",
+  insufficient: "موجودی GHDR کافی نیست",
+  hadiya_accepted: "هدیه پذیرفته شد!",
+  give_again: "دوباره کمک کنید",
+};
+
+const ur: T = {
+  home: "گھر", hadiya: "ہدیہ", campaigns: "مہمات", shura: "شوریٰ",
+  profile: "پروفائل", admin: "انتظامیہ",
+  sign_in: "سائن ان", sign_out: "سائن آؤٹ", get_started: "شروع کریں",
+  loading: "لوڈ ہو رہا ہے…", verified: "✓ تصدیق شدہ", days_left: "دن باقی",
+  ends_today: "آج ختم ہوتا ہے!", raised: "جمع ہوئے", goal: "ہدف", live: "لائیو",
+  assalamu_alaikum: "السلام علیکم",
+  balance_label: "آپ کا GHDR بیلنس",
+  daily_cap: "یومیہ حد استعمال",
+  this_session: "اس سیشن میں",
+  tap_to_log: "صلوات درج کرنے کے لیے ٹیپ کریں",
+  per_tap: "GHDR ہر ٹیپ",
+  recording: "چین پر ریکارڈ ہو رہا ہے…",
+  tapped: "صلوات",
+  recording_in: "ریکارڈنگ",
+  submit_now: "ابھی ریکارڈ کریں →",
+  daily_cap_reached: "یومیہ حد پوری ہوگئی · کل واپس آئیں",
+  recent_activity: "حالیہ سرگرمی",
+  quick_actions: "فوری اقدامات",
+  join_majlis: "مجلس میں شامل ہوں",
+  events_drives: "تقریبات اور مہمات",
+  shura_council: "شوریٰ کونسل",
+  vote_on_proposals: "تجاویز پر ووٹ دیں",
+  top_earners: "سرفہرست صلوات خواں",
+  redeem_hadiya: "ہدیہ ریڈیم کریں",
+  donate_ghdr: "GHDR کسی مقصد کے لیے عطیہ دیں",
+  your_profile: "آپ کا پروفائل",
+  lifetime_salawat: "صلوات",
+  ghdr_balance: "GHDR",
+  daily_used: "آج",
+  this_week: "اس ہفتے",
+  nft_certs: "NFT سرٹیفکیٹس",
+  my_campaigns: "میری مہمات",
+  no_campaigns: "آپ نے ابھی تک کسی مہم میں شرکت نہیں کی۔",
+  view_campaigns: "فعال مہمات دیکھیں →",
+  salawat_history: "صلوات کی تاریخ",
+  connected_wallet: "منسلک والیٹ",
+  on_chain_activity: "چین پر سرگرمی",
+  view_transactions: "تمام لین دین دیکھیں",
+  settings: "ترتیبات",
+  leaderboard: "لیڈر بورڈ",
+  language: "زبان",
+  campaigns_title: "مہمات",
+  live_now: "ابھی لائیو",
+  coming_soon: "جلد آرہا ہے",
+  completed_label: "مکمل",
+  join_campaign: "مہم میں شامل ہوں",
+  joined_label: "✓ شامل",
+  joining_label: "شامل ہو رہے ہیں…",
+  sign_in_to_join: "شامل ہونے کیلئے سائن ان کریں",
+  participants_label: "شرکاء",
+  participating: "شرکت کر رہے ہیں",
+  browse_all: "سب دیکھیں →",
+  hadiya_title: "ہدیہ",
+  choose_cause: "ایک مقصد منتخب کریں",
+  select_amount: "رقم منتخب کریں",
+  approve_btn: "مرحلہ ۱: GHDR منظور کریں",
+  approving: "منظوری دی جا رہی ہے…",
+  confirm_donate: "تصدیق کریں — جلائیں اور عطیہ دیں",
+  confirming: "تصدیق ہو رہی ہے…",
+  insufficient: "GHDR بیلنس ناکافی",
+  hadiya_accepted: "ہدیہ قبول ہوگیا!",
+  give_again: "دوبارہ دیں",
+};
+
+const TRANSLATIONS: Record<Lang, T> = { en, ar, fa, ur };
+
+// ─── Context ──────────────────────────────────────────────────────────────────
+
+interface I18nCtx {
+  lang: Lang;
+  setLang: (l: Lang) => void;
+  t: (key: string) => string;
+  isRTL: boolean;
+}
+
+const I18nContext = createContext<I18nCtx>({
+  lang: "en", setLang: () => {}, t: (k) => k, isRTL: false,
+});
+
+export function LanguageProvider({ children }: { children: React.ReactNode }) {
+  const [lang, setLangState] = useState<Lang>("en");
+
+  // Restore from localStorage on mount
+  useEffect(() => {
+    const saved = localStorage.getItem("ghadir_lang") as Lang | null;
+    if (saved && ["en", "ar", "fa", "ur"].includes(saved)) {
+      applyLang(saved);
+      setLangState(saved);
+    }
+  }, []);
+
+  function applyLang(l: Lang) {
+    const rtl = RTL_LANGS.includes(l);
+    document.documentElement.dir  = rtl ? "rtl" : "ltr";
+    document.documentElement.lang = l;
+    document.body.style.fontFamily = LANG_META[l].font;
+  }
+
+  const setLang = (l: Lang) => {
+    setLangState(l);
+    localStorage.setItem("ghadir_lang", l);
+    applyLang(l);
+  };
+
+  const t = (key: string) =>
+    TRANSLATIONS[lang][key] ?? TRANSLATIONS.en[key] ?? key;
+
+  return (
+    <I18nContext.Provider value={{ lang, setLang, t, isRTL: RTL_LANGS.includes(lang) }}>
+      {children}
+    </I18nContext.Provider>
+  );
+}
+
+export const useLanguage = () => useContext(I18nContext);

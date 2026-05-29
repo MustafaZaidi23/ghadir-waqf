@@ -7,6 +7,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { getTelegramUser, getTelegramWebApp, isInTelegram } from "@/lib/telegram";
 import { fetchPublicCampaigns, Campaign } from "../admin/actions";
+import { useLanguage, LANG_META, Lang } from "@/lib/i18n";
 
 interface SalawatLog {
   id: string;
@@ -33,6 +34,7 @@ const CTA_LABEL: Record<string, { href: string; label: string }> = {
 export default function Dashboard() {
   const { address, isConnected } = useAccount();
   const { login } = usePrivy();
+  const { lang, setLang, t } = useLanguage();
   const [logs, setLogs] = useState<SalawatLog[]>([]);
   const [loading, setLoading] = useState(false);
   const [linkStatus, setLinkStatus] = useState<"idle" | "linking" | "linked" | "error">("idle");
@@ -312,6 +314,31 @@ export default function Dashboard() {
             ))}
           </div>
         )}
+      </div>
+
+      {/* Language */}
+      <div className="card">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="font-semibold text-[#e8f5e8]">{t("language")}</h2>
+          <span className="text-xs text-[#6b9e6b]">{LANG_META[lang].flag} {LANG_META[lang].nativeLabel}</span>
+        </div>
+        <div className="grid grid-cols-2 gap-2">
+          {(Object.keys(LANG_META) as Lang[]).map(l => (
+            <button
+              key={l}
+              onClick={() => setLang(l)}
+              className={`flex items-center gap-2 px-3 py-2 rounded-lg border text-sm transition-all ${
+                lang === l
+                  ? "bg-[#0d2b16] border-[#22c55e50] text-[#22c55e] font-semibold"
+                  : "border-[#1e3a1e] text-[#6b9e6b] hover:border-[#2d4a2d] hover:text-[#e8f5e8]"
+              }`}
+            >
+              <span>{LANG_META[l].flag}</span>
+              <span>{LANG_META[l].nativeLabel}</span>
+              {lang === l && <span className="ml-auto text-xs">✓</span>}
+            </button>
+          ))}
+        </div>
       </div>
     </div>
   );
