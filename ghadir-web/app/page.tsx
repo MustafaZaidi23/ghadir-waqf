@@ -37,6 +37,8 @@ export default function Home() {
   const [error, setError] = useState<string | null>(null);
   const [bursts, setBursts] = useState<Burst[]>([]);
   const [activeCampaign, setActiveCampaign] = useState<Campaign | null>(null);
+  const [campaignJoined, setCampaignJoined] = useState(false);
+  const [campaignJoining, setCampaignJoining] = useState(false);
 
   const { data: balance, refetch: refetchBalance } = useReadContract({
     address: SALAWAT_TOKEN, abi: SALAWAT_ABI,
@@ -73,6 +75,30 @@ export default function Home() {
       .then((list) => setActiveCampaign(list.find((c) => c.status === "active") ?? null))
       .catch(() => {});
   }, []);
+
+  // Check if user has joined the active campaign
+  useEffect(() => {
+    if (!address || !activeCampaign?.id) return;
+    fetch(`/api/join-campaign?wallet=${address}`)
+      .then(r => r.json())
+      .then(d => setCampaignJoined((d.joined ?? []).includes(activeCampaign.id)))
+      .catch(() => {});
+  }, [address, activeCampaign?.id]);
+
+  const handleJoinCampaign = async () => {
+    if (!address || !activeCampaign?.id || campaignJoining) return;
+    setCampaignJoining(true);
+    try {
+      const res = await fetch("/api/join-campaign", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ campaign_id: activeCampaign.id, wallet_address: address }),
+      });
+      if (res.ok) setCampaignJoined(true);
+    } finally {
+      setCampaignJoining(false);
+    }
+  };
 
   // Cleanup debounce on unmount
   useEffect(() => () => { if (debounceRef.current) clearTimeout(debounceRef.current); }, []);
@@ -259,27 +285,38 @@ export default function Home() {
 
       {/* Active campaign banner */}
       {activeCampaign && (
-        <Link href="/campaigns"
-          style={{
-            display: "block", textDecoration: "none",
-            background: "linear-gradient(90deg, rgba(167,139,250,0.1), rgba(34,197,94,0.08))",
-            border: "1px solid rgba(167,139,250,0.25)",
-            borderRadius: 12, padding: "10px 14px",
-          }}
-        >
+        <div style={{
+          background: "linear-gradient(90deg, rgba(167,139,250,0.1), rgba(34,197,94,0.08))",
+          border: `1px solid ${campaignJoined ? "rgba(34,197,94,0.3)" : "rgba(167,139,250,0.25)"}`,
+          borderRadius: 12, padding: "10px 14px",
+        }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <span style={{ fontSize: 16 }}>✨</span>
-              <div>
-                <div style={{ fontSize: 12, fontWeight: 600, color: "#e8f5e8" }}>{activeCampaign.name}</div>
-                <div style={{ fontSize: 10, color: "#a78bfa", marginTop: 1 }}>
-                  Active campaign · Tap to learn more
+            <div style={{ display: "flex", alignItems: "center", gap: 8, flex: 1, minWidth: 0 }}>
+              <span style={{ fontSize: 16, flexShrink: 0 }}>{campaignJoined ? "✅" : "✨"}</span>
+              <div style={{ minWidth: 0 }}>
+                <div style={{ fontSize: 12, fontWeight: 600, color: "#e8f5e8", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                  {activeCampaign.name}
+                </div>
+                <div style={{ fontSize: 10, color: campaignJoined ? "#22c55e" : "#a78bfa", marginTop: 1 }}>
+                  {campaignJoined ? "You're participating · keep going!" : "Active campaign · join to participate"}
                 </div>
               </div>
             </div>
-            <span style={{ fontSize: 11, color: "#a78bfa" }}>→</span>
+            {campaignJoined ? (
+              <Link href="/" style={{ fontSize: 11, padding: "4px 10px", borderRadius: 8, background: "#22c55e18", color: "#22c55e", border: "1px solid #22c55e30", textDecoration: "none", fontWeight: 600, flexShrink: 0 }}>
+                Log Salawat ↑
+              </Link>
+            ) : (
+              <button
+                onClick={handleJoinCampaign}
+                disabled={campaignJoining}
+                style={{ fontSize: 11, padding: "4px 10px", borderRadius: 8, background: "rgba(167,139,250,0.12)", color: "#a78bfa", border: "1px solid rgba(167,139,250,0.25)", cursor: "pointer", fontWeight: 600, flexShrink: 0, opacity: campaignJoining ? 0.6 : 1 }}
+              >
+                {campaignJoining ? "Joining…" : "Join →"}
+              </button>
+            )}
           </div>
-        </Link>
+        </div>
       )}
 
       {/* Salawat tap button */}
