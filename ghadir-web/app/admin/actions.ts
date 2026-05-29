@@ -78,6 +78,18 @@ export async function fetchOverviewStats() {
   };
 }
 
+// ─── Role lookup ─────────────────────────────────────────────────────────────
+
+export async function fetchMyRole(walletAddress: string): Promise<string | null> {
+  const { data } = await supabase
+    .from("team_members")
+    .select("role")
+    .ilike("wallet_address", walletAddress)
+    .eq("active", true)
+    .single();
+  return data?.role ?? null;
+}
+
 // ─── Team members ─────────────────────────────────────────────────────────────
 
 export type TeamMember = {
