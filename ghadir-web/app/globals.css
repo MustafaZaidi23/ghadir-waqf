@@ -1,74 +1,134 @@
 @import "tailwindcss";
 
 @keyframes coinBurst {
-  0%   { opacity: 1; transform: translateY(0)   scale(1);   }
+  0%   { opacity: 1; transform: translateY(0) scale(1); }
   100% { opacity: 0; transform: translateY(-50px) scale(1.4); }
 }
 @keyframes salawatPulse {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(82,183,136,0); }
-  50%       { box-shadow: 0 0 0 8px rgba(82,183,136,0.15); }
+  0%, 100% { box-shadow: 0 0 0 0 rgba(45,106,79,0); }
+  50%       { box-shadow: 0 0 0 10px rgba(45,106,79,0.15); }
 }
-
-@theme inline {
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+@keyframes livePulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.35; }
+}
+@keyframes slideUp {
+  from { transform: translateY(100%); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
 }
 
 body {
-  background: #0a0f0a;
-  color: #e8f5e8;
-  font-family: Arial, Helvetica, sans-serif;
+  background: #F9F6EF;
+  color: #1A1A1A;
+  font-family: 'DM Sans', Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
 }
 
+/* ── Public light theme ──────────────────────────────────── */
 .card {
+  background: #FFFFFF;
+  border: 0.5px solid rgba(0,0,0,0.07);
+  border-radius: 14px;
+  padding: 1rem;
+}
+
+.btn-primary {
+  background: #0A3A22;
+  color: #E8D5A3;
+  padding: 0.75rem 1.5rem;
+  border-radius: 10px;
+  font-weight: 500;
+  font-size: 0.875rem;
+  transition: background 0.15s;
+  cursor: pointer;
+  border: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+.btn-primary:hover:not(:disabled) { background: #1A4A30; }
+.btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.btn-gold {
+  background: #C9A84C;
+  color: #0A3A22;
+  padding: 0.75rem 1.5rem;
+  border-radius: 10px;
+  font-weight: 500;
+  font-size: 0.875rem;
+  transition: background 0.15s;
+  cursor: pointer;
+  border: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+.btn-gold:hover:not(:disabled) { background: #b8973b; }
+.btn-gold:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.input {
+  width: 100%;
+  background: #F9F6EF;
+  border: 0.5px solid rgba(10,58,34,0.2);
+  border-radius: 10px;
+  padding: 0.625rem 0.875rem;
+  color: #1A1A1A;
+  font-size: 0.875rem;
+  font-family: 'DM Sans', sans-serif;
+}
+.input:focus { outline: none; border-color: #2D6A4F; border-width: 1px; }
+select.input option { background: #fff; color: #1A1A1A; }
+
+/* ── Admin dark theme (scoped) ───────────────────────────── */
+.admin-theme {
+  background: #0a0f0a;
+  color: #e8f5e8;
+  min-height: 100vh;
+}
+
+.admin-theme .card {
   background: #111a11;
   border: 1px solid #1e3a1e;
   border-radius: 12px;
   padding: 1.5rem;
 }
 
-.btn-primary {
+.admin-theme .btn-primary {
   background: #16a34a;
-  color: white;
+  color: #fff;
   padding: 0.625rem 1.5rem;
   border-radius: 8px;
   font-weight: 600;
+  font-size: 0.875rem;
   transition: background 0.15s;
   cursor: pointer;
   border: none;
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
 }
-.btn-primary:hover:not(:disabled) { background: #15803d; }
-.btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+.admin-theme .btn-primary:hover:not(:disabled) { background: #15803d; }
+.admin-theme .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
 
-.btn-gold {
+.admin-theme .btn-gold {
   background: #d97706;
-  color: white;
+  color: #fff;
   padding: 0.625rem 1.5rem;
   border-radius: 8px;
   font-weight: 600;
   transition: background 0.15s;
   cursor: pointer;
   border: none;
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
-.btn-gold:hover:not(:disabled) { background: #b45309; }
-.btn-gold:disabled { opacity: 0.5; cursor: not-allowed; }
+.admin-theme .btn-gold:hover:not(:disabled) { background: #b45309; }
 
-.btn-danger {
-  background: #7f1d1d;
-  color: #fca5a5;
-  padding: 0.375rem 0.75rem;
-  border-radius: 6px;
-  font-size: 0.75rem;
-  font-weight: 500;
-  transition: background 0.15s;
-  cursor: pointer;
-  border: none;
-}
-.btn-danger:hover { background: #991b1b; }
-
-.input {
+.admin-theme .input {
   width: 100%;
   background: #0a0f0a;
   border: 1px solid #1e3a1e;
@@ -77,4 +137,5 @@ body {
   color: #e8f5e8;
   font-size: 0.875rem;
 }
-.input:focus { outline: none; border-color: #22c55e; }
+.admin-theme .input:focus { outline: none; border-color: #22c55e; }
+.admin-theme select.input option { background: #0a0f0a; color: #e8f5e8; }
