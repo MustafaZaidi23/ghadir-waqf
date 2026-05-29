@@ -1,9 +1,73 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-  <!-- Dark green background with rounded corners -->
-  <rect width="512" height="512" rx="112" fill="#0A3A22"/>
-  <!-- Gold crescent moon (formed by two circles: outer minus inner offset) -->
-  <circle cx="256" cy="256" r="148" fill="#C9A84C"/>
-  <circle cx="308" cy="210" r="128" fill="#0A3A22"/>
-  <!-- Small star -->
-  <circle cx="330" cy="160" r="18" fill="#C9A84C"/>
+  <!-- App icon background — Ghadir Green with rounded corners -->
+  <rect width="512" height="512" rx="112" fill="#0A3D2E"/>
+
+  <!-- Gold outer ring -->
+  <circle cx="256" cy="256" r="222" fill="none" stroke="#D4AF37" stroke-width="10"/>
+  <!-- Inner dark circle -->
+  <circle cx="256" cy="256" r="206" fill="#071f17"/>
+
+  <!-- Divine radiance / star at top -->
+  <g transform="translate(256,152)" fill="#D4AF37">
+    <!-- Central star point -->
+    <circle cx="0" cy="0" r="14"/>
+    <!-- Rays -->
+    <polygon points="0,-26 3,-8 -3,-8"   opacity="0.9"/>
+    <polygon points="0,26  3,8  -3,8"    opacity="0.5"/>
+    <polygon points="-26,0 -8,3 -8,-3"  opacity="0.7"/>
+    <polygon points="26,0   8,3  8,-3"   opacity="0.7"/>
+    <polygon points="-19,-19 -6,-8 -8,-6" opacity="0.6"/>
+    <polygon points="19,-19   6,-8  8,-6" opacity="0.6"/>
+    <polygon points="-19,19  -6,8  -8,6"  opacity="0.4"/>
+    <polygon points="19,19    6,8   8,6"  opacity="0.4"/>
+  </g>
+
+  <!-- Left arm — raised from lower-left, reaching up to center -->
+  <path d="
+    M 148 400
+    C 138 360, 142 310, 158 270
+    C 170 238, 188 210, 210 188
+    L 226 170
+    C 234 162, 242 158, 248 162
+    L 258 172
+    C 262 176, 261 183, 256 188
+    L 246 196
+    C 240 202, 238 210, 240 218
+    L 248 242
+    C 250 250, 246 260, 238 262
+    C 228 264, 218 256, 214 246
+    L 200 210
+    C 192 230, 180 258, 172 290
+    C 164 318, 160 356, 162 400
+    Z
+  " fill="#D4AF37" opacity="0.95"/>
+
+  <!-- Right arm — raised from lower-right, reaching up to center -->
+  <path d="
+    M 364 400
+    C 374 360, 370 310, 354 270
+    C 342 238, 324 210, 302 188
+    L 286 170
+    C 278 162, 270 158, 264 162
+    L 254 172
+    C 250 176, 251 183, 256 188
+    L 266 196
+    C 272 202, 274 210, 272 218
+    L 264 242
+    C 262 250, 266 260, 274 262
+    C 284 264, 294 256, 298 246
+    L 312 210
+    C 320 230, 332 258, 340 290
+    C 348 318, 352 356, 350 400
+    Z
+  " fill="#D4AF37" opacity="0.95"/>
+
+  <!-- Clasped hands joining point — central overlap glow -->
+  <ellipse cx="256" cy="200" rx="18" ry="22" fill="#D4AF37" opacity="0.7"/>
+
+  <!-- Thin gold inner ring to frame the scene -->
+  <circle cx="256" cy="256" r="195" fill="none" stroke="#D4AF37" stroke-width="1.5" opacity="0.3"/>
+
+  <!-- Small gold dot at bottom of circle — brand finishing detail -->
+  <circle cx="256" cy="455" r="5" fill="#D4AF37" opacity="0.6"/>
 </svg>

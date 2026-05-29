@@ -62,9 +62,14 @@ export function Nav() {
         <div className="max-w-5xl mx-auto w-full flex items-center justify-between">
 
           {/* Logo */}
-          <Link href="/" style={{ textDecoration: "none", display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
-            <span style={{ fontFamily: "'Cinzel', serif", fontWeight: 700, fontSize: 17, color: "#D4AF37", letterSpacing: "0.05em" }}>GHADIR</span>
-            <span style={{ fontFamily: "'Inter', sans-serif", fontWeight: 300, fontSize: 11, color: "rgba(212,175,55,0.55)", letterSpacing: "0.18em", textTransform: "uppercase" }}>WAQF</span>
+          <Link href="/" style={{ textDecoration: "none", display: "flex", alignItems: "center", gap: 10, flexShrink: 0 }}>
+            {/* Brand mark */}
+            <img src="/icon.svg" alt="Ghadir" width={32} height={32} style={{ borderRadius: 7, flexShrink: 0 }} />
+            {/* Wordmark */}
+            <span style={{ display: "flex", flexDirection: "column", lineHeight: 1 }}>
+              <span style={{ fontFamily: "'Cinzel', serif", fontWeight: 700, fontSize: 15, color: "#D4AF37", letterSpacing: "0.06em" }}>GHADIR</span>
+              <span style={{ fontFamily: "'Inter', sans-serif", fontWeight: 300, fontSize: 9, color: "rgba(212,175,55,0.5)", letterSpacing: "0.22em", textTransform: "uppercase", marginTop: 1 }}>WAQF</span>
+            </span>
           </Link>
 
           {/* Desktop links */}
