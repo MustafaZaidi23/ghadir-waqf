@@ -17,10 +17,6 @@
   to   { transform: translateY(0);    opacity: 1; }
 }
 
-html, body {
-  overflow-x: hidden;
-}
-
 body {
   background: #F9F6EF;
   color: #1A1A1A;
