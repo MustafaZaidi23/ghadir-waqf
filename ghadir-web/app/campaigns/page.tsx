@@ -37,12 +37,12 @@ const SEED: Campaign[] = [
   {
     id: "s1", name: "Arbaeen Ziyarat Fund 2026", type: "fundraising", status: "active",
     description: "Support low-income families to perform Ziyarat Arbaeen. Verified by The Zahra Trust. Funds released quarterly to pilgrims in need.",
-    target_usd: 5000, raised_usd: 2150, start_date: "2026-05-01", end_date: "2026-08-25", platform: "multiple",
+    target_usd: 5000, raised_usd: 2150, participants: 318, start_date: "2026-05-01", end_date: "2026-08-25", platform: "multiple",
   },
   {
     id: "s2", name: "Salawat Million Challenge", type: "salawat", status: "active",
     description: "Collectively reach 1,000,000 recorded Salawat before Eid al-Adha. Every Salawat counts — invite your family and masjid.",
-    start_date: "2026-05-15", end_date: "2026-06-30", platform: "telegram",
+    participants: 1240, start_date: "2026-05-15", end_date: "2026-06-30", platform: "telegram",
   },
   {
     id: "s3", name: "Ghadir Day — 18 Dhul Hijja", type: "special_day", status: "active",
@@ -52,7 +52,7 @@ const SEED: Campaign[] = [
   {
     id: "s4", name: "Clean Water for Yemen", type: "fundraising", status: "active",
     description: "Fund solar-powered water purification systems for rural Yemen. Every 1,000 GHDR = $1 donated directly to the field partner.",
-    target_usd: 10000, raised_usd: 3400, start_date: "2026-04-01", end_date: "2026-09-30", platform: "website",
+    target_usd: 10000, raised_usd: 3400, participants: 487, start_date: "2026-04-01", end_date: "2026-09-30", platform: "website",
   },
   {
     id: "s5", name: "Islamic Education Scholarship", type: "awareness", status: "paused",
@@ -62,7 +62,7 @@ const SEED: Campaign[] = [
   {
     id: "s6", name: "Ramadan GHDR Boost 2026", type: "ramadan", status: "completed",
     description: "2× multiplier ran throughout Ramadan 2026. Community earned 1.8M+ GHDR and donated $1,875 in hadiya to verified charities.",
-    target_usd: 2000, raised_usd: 1875, start_date: "2026-03-01", end_date: "2026-03-30", platform: "telegram",
+    target_usd: 2000, raised_usd: 1875, participants: 892, start_date: "2026-03-01", end_date: "2026-03-30", platform: "telegram",
   },
 ];
 
@@ -143,6 +143,22 @@ function HeroCarousel({ items }: { items: Campaign[] }) {
             <div style={{ height: 7, background: "rgba(255,255,255,0.08)", borderRadius: 4, overflow: "hidden" }}>
               <div style={{ height: "100%", width: `${pct}%`, background: t.color, borderRadius: 4, transition: "width .6s" }} />
             </div>
+          </div>
+        )}
+
+        {/* Participants */}
+        {(c.participants ?? 0) > 0 && (
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
+            <div style={{ display: "flex" }}>
+              {[...Array(Math.min(5, c.participants!))].map((_, i) => (
+                <div key={i} style={{ width: 22, height: 22, borderRadius: "50%", background: t.color + "30", border: `1.5px solid ${t.color}50`, marginLeft: i > 0 ? -7 : 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10 }}>
+                  👤
+                </div>
+              ))}
+            </div>
+            <span style={{ fontSize: 12, color: "#9ca3af" }}>
+              <strong style={{ color: t.color }}>{c.participants!.toLocaleString()}</strong> participating
+            </span>
           </div>
         )}
 
@@ -246,6 +262,16 @@ function CampaignCard({ c }: { c: Campaign }) {
             <div style={{ height: 4, background: "#1a2e1a", borderRadius: 2, overflow: "hidden" }}>
               <div style={{ height: "100%", width: `${pct}%`, background: done ? "#2d4a2d" : t.color, borderRadius: 2 }} />
             </div>
+          </div>
+        )}
+
+        {/* Participants */}
+        {(c.participants ?? 0) > 0 && (
+          <div style={{ display: "flex", alignItems: "center", gap: 5, fontSize: 11 }}>
+            <span style={{ color: done ? "#374151" : t.color, fontWeight: 600 }}>
+              👥 {c.participants!.toLocaleString()}
+            </span>
+            <span style={{ color: "#374151" }}>participants</span>
           </div>
         )}
 

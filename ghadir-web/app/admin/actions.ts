@@ -180,6 +180,7 @@ export type Campaign = {
   end_date?: string;
   target_usd?: number | null;
   raised_usd?: number;
+  participants?: number;
   platform?: string;
   description?: string;
   notes?: string;

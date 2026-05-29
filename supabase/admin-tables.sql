@@ -34,9 +34,13 @@ create table if not exists campaigns (
   end_date date,
   target_usd numeric,
   raised_usd numeric not null default 0,
+  participants integer not null default 0,
   platform text,
   description text,
   notes text,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
+
+-- If the table already exists, add the column:
+alter table campaigns add column if not exists participants integer not null default 0;
