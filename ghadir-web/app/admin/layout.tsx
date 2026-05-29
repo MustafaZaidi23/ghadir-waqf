@@ -70,8 +70,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   return (
     <AdminRoleContext.Provider value={role}>
-      <div className="admin-theme">
-      <div className="max-w-6xl mx-auto px-4 py-8">
+      <div className="max-w-6xl mx-auto">
         {/* Mobile: scrollable tab bar */}
         <nav className="md:hidden flex overflow-x-auto gap-1.5 mb-6 pb-1 -mx-4 px-4">
           {nav.map((n) => (
@@ -135,7 +134,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             )}
           </main>
         </div>
-      </div>
       </div>
     </AdminRoleContext.Provider>
   );

@@ -1,9 +1,12 @@
 import type { Metadata, Viewport } from "next";
+import { Geist } from "next/font/google";
 import Script from "next/script";
 import "./globals.css";
 import { Providers } from "./providers";
-import { BottomNav } from "@/components/BottomNav";
+import { Nav } from "@/components/Nav";
 import { PwaRegister } from "@/components/PwaRegister";
+
+const geist = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
 
 export const viewport: Viewport = {
   themeColor: "#0A3A22",
@@ -33,29 +36,36 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className="h-full">
+    <html lang="en" className={`${geist.variable} h-full antialiased`}>
       <head>
-        <Script src="https://telegram.org/js/telegram-web-app.js" strategy="beforeInteractive" />
+        <Script
+          src="https://telegram.org/js/telegram-web-app.js"
+          strategy="beforeInteractive"
+        />
+        {/* Arabic calligraphy font */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link
-          href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500&family=Noto+Nastaliq+Urdu:wght@400;700&display=swap"
+          href="https://fonts.googleapis.com/css2?family=Noto+Nastaliq+Urdu:wght@400;700&display=swap"
           rel="stylesheet"
         />
+        {/* PWA: iOS home screen */}
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         <meta name="apple-mobile-web-app-title" content="Ghadir Waqf" />
+        {/* iOS splash screens */}
         <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+        {/* MS tiles */}
         <meta name="msapplication-TileImage" content="/icon-144.png" />
         <meta name="msapplication-TileColor" content="#0A3A22" />
       </head>
-      <body className="min-h-full flex flex-col" style={{ background: "#F9F6EF" }}>
+      <body className="min-h-full flex flex-col">
         <Providers>
-          <main className="flex-1">
+          <Nav />
+          <main className="flex-1 max-w-5xl mx-auto w-full px-4 py-8">
             {children}
           </main>
-          <BottomNav />
         </Providers>
         <PwaRegister />
       </body>
