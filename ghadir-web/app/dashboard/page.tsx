@@ -33,7 +33,7 @@ const CTA_LABEL: Record<string, { href: string; label: string }> = {
 
 export default function Dashboard() {
   const { address, isConnected } = useAccount();
-  const { login } = usePrivy();
+  const { login, logout } = usePrivy();
   const { lang, setLang, t } = useLanguage();
   const [logs, setLogs] = useState<SalawatLog[]>([]);
   const [loading, setLoading] = useState(false);
@@ -133,7 +133,7 @@ export default function Dashboard() {
   return (
     <div className="space-y-8">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-[#e8f5e8]">Dashboard</h1>
+        <h1 className="text-2xl font-bold text-[#e8f5e8]">{t("your_profile")}</h1>
         {tgUser && (
           <div className="flex items-center gap-2 text-sm text-[#6b9e6b]">
             <span>✈️</span>
@@ -149,15 +149,15 @@ export default function Dashboard() {
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
         <div className="card text-center">
           <div className="text-3xl font-bold text-[#22c55e]">{ghdr}</div>
-          <div className="text-[#6b9e6b] text-sm mt-1">GHDR Balance</div>
+          <div className="text-[#6b9e6b] text-sm mt-1">{t("ghdr_balance")}</div>
         </div>
         <div className="card text-center">
           <div className="text-3xl font-bold text-[#f59e0b]">{lifetimeCount}</div>
-          <div className="text-[#6b9e6b] text-sm mt-1">Lifetime Salawat</div>
+          <div className="text-[#6b9e6b] text-sm mt-1">{t("lifetime_salawat")}</div>
         </div>
         <div className="card text-center col-span-2 sm:col-span-1">
           <div className="text-3xl font-bold text-[#e8f5e8]">{dailyPct}%</div>
-          <div className="text-[#6b9e6b] text-sm mt-1">Daily Cap Used</div>
+          <div className="text-[#6b9e6b] text-sm mt-1">{t("daily_used")}</div>
           <div className="mt-2 bg-[#1e3a1e] rounded-full h-2">
             <div
               className="bg-[#22c55e] h-2 rounded-full transition-all"
@@ -167,24 +167,19 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Wallet */}
-      <div className="card">
-        <div className="text-[#6b9e6b] text-sm mb-1">Connected wallet</div>
-        <div className="text-[#e8f5e8] font-mono text-sm break-all">{address}</div>
-      </div>
 
       {/* My Campaigns */}
       <div className="card">
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-          <h2 className="font-semibold text-[#e8f5e8]">My Campaigns</h2>
-          <Link href="/campaigns" style={{ fontSize: 11, color: "#6b9e6b", textDecoration: "none" }}>Browse all →</Link>
+          <h2 className="font-semibold text-[#e8f5e8]">{t("my_campaigns")}</h2>
+          <Link href="/campaigns" style={{ fontSize: 11, color: "#6b9e6b", textDecoration: "none" }}>{t("browse_all")}</Link>
         </div>
         {myCampaigns.length === 0 ? (
           <div style={{ textAlign: "center", padding: "20px 0" }}>
             <div style={{ fontSize: 24, marginBottom: 8 }}>🕌</div>
-            <p style={{ fontSize: 13, color: "#6b9e6b", margin: 0 }}>You haven't joined any campaigns yet.</p>
+            <p style={{ fontSize: 13, color: "#6b9e6b", margin: 0 }}>{t("no_campaigns")}</p>
             <Link href="/campaigns" style={{ fontSize: 12, color: "#22c55e", textDecoration: "none", marginTop: 6, display: "inline-block" }}>
-              View active campaigns →
+              {t("view_campaigns")}
             </Link>
           </div>
         ) : (
@@ -211,7 +206,7 @@ export default function Dashboard() {
                       <div style={{ display: "flex", alignItems: "center", gap: 5, marginBottom: 8 }}>
                         <span style={{ width: 6, height: 6, borderRadius: "50%", background: done ? "#374151" : color, flexShrink: 0, display: "inline-block", ...(done ? {} : { animation: "livePulse 2s infinite" }) }} />
                         <span style={{ fontSize: 10, color: done ? "#374151" : color, fontWeight: 600, textTransform: "uppercase" as const, letterSpacing: ".05em" }}>
-                          {done ? "Completed" : "Active"}
+                          {done ? t("completed_label") : t("live")}
                         </span>
                       </div>
                       {/* name */}
@@ -261,7 +256,7 @@ export default function Dashboard() {
 
       {/* History */}
       <div className="card">
-        <h2 className="font-semibold text-[#e8f5e8] mb-4">Salawat History</h2>
+        <h2 className="font-semibold text-[#e8f5e8] mb-4">{t("salawat_history")}</h2>
         {loading ? (
           <p className="text-[#6b9e6b] text-sm">Loading…</p>
         ) : logs.length === 0 ? (
@@ -316,29 +311,75 @@ export default function Dashboard() {
         )}
       </div>
 
-      {/* Language */}
-      <div className="card">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="font-semibold text-[#e8f5e8]">{t("language")}</h2>
-          <span className="text-xs text-[#6b9e6b]">{LANG_META[lang].flag} {LANG_META[lang].nativeLabel}</span>
+      {/* Settings */}
+      <div className="card space-y-0 overflow-hidden p-0">
+        <div className="px-4 py-3 border-b border-[#1e3a1e]">
+          <p className="text-xs font-semibold text-[#6b9e6b] uppercase tracking-widest">{t("settings")}</p>
         </div>
-        <div className="grid grid-cols-2 gap-2">
-          {(Object.keys(LANG_META) as Lang[]).map(l => (
-            <button
-              key={l}
-              onClick={() => setLang(l)}
-              className={`flex items-center gap-2 px-3 py-2 rounded-lg border text-sm transition-all ${
-                lang === l
-                  ? "bg-[#0d2b16] border-[#22c55e50] text-[#22c55e] font-semibold"
-                  : "border-[#1e3a1e] text-[#6b9e6b] hover:border-[#2d4a2d] hover:text-[#e8f5e8]"
-              }`}
-            >
-              <span>{LANG_META[l].flag}</span>
-              <span>{LANG_META[l].nativeLabel}</span>
-              {lang === l && <span className="ml-auto text-xs">✓</span>}
-            </button>
-          ))}
+
+        {/* Wallet row */}
+        <div className="flex items-center gap-3 px-4 py-3 border-b border-[#1e3a1e]">
+          <div className="w-8 h-8 rounded-lg bg-[#0d2b16] flex items-center justify-center text-sm flex-shrink-0">💼</div>
+          <div className="flex-1 min-w-0">
+            <p className="text-xs text-[#6b9e6b]">{t("connected_wallet")}</p>
+            <p className="text-[#e8f5e8] text-xs font-mono truncate mt-0.5">{address}</p>
+          </div>
         </div>
+
+        {/* Language row — expands inline */}
+        <details className="group border-b border-[#1e3a1e]">
+          <summary className="flex items-center gap-3 px-4 py-3 cursor-pointer list-none">
+            <div className="w-8 h-8 rounded-lg bg-[#0d2b16] flex items-center justify-center text-sm flex-shrink-0">🌐</div>
+            <div className="flex-1">
+              <p className="text-xs text-[#6b9e6b]">{t("language")}</p>
+              <p className="text-[#e8f5e8] text-sm mt-0.5">{LANG_META[lang].flag} {LANG_META[lang].nativeLabel}</p>
+            </div>
+            <span className="text-[#6b9e6b] text-xs group-open:rotate-180 transition-transform">▾</span>
+          </summary>
+          <div className="grid grid-cols-2 gap-2 px-4 pb-3">
+            {(Object.keys(LANG_META) as Lang[]).map(l => (
+              <button key={l} onClick={() => setLang(l)}
+                className={`flex items-center gap-2 px-3 py-2 rounded-lg border text-sm transition-all ${
+                  lang === l
+                    ? "bg-[#0d2b16] border-[#22c55e50] text-[#22c55e] font-medium"
+                    : "border-[#1e3a1e] text-[#6b9e6b] hover:border-[#2d4a2d] hover:text-[#e8f5e8]"
+                }`}>
+                <span>{LANG_META[l].flag}</span>
+                <span>{LANG_META[l].nativeLabel}</span>
+                {lang === l && <span className="ml-auto text-[#22c55e] text-xs">✓</span>}
+              </button>
+            ))}
+          </div>
+        </details>
+
+        {/* On-chain activity row */}
+        {address && (
+          <a href={`${EXPLORER}/address/${address}`} target="_blank" rel="noopener noreferrer"
+            className="flex items-center gap-3 px-4 py-3 border-b border-[#1e3a1e] no-underline hover:bg-[#0d1a0d] transition-colors">
+            <div className="w-8 h-8 rounded-lg bg-[#0d2b16] flex items-center justify-center text-sm flex-shrink-0">🔍</div>
+            <div className="flex-1">
+              <p className="text-xs text-[#6b9e6b]">{t("on_chain_activity")}</p>
+              <p className="text-[#e8f5e8] text-sm mt-0.5">{t("view_transactions")} ↗</p>
+            </div>
+          </a>
+        )}
+
+        {/* Leaderboard row */}
+        <Link href="/leaderboard"
+          className="flex items-center gap-3 px-4 py-3 border-b border-[#1e3a1e] no-underline hover:bg-[#0d1a0d] transition-colors">
+          <div className="w-8 h-8 rounded-lg bg-[#0d2b16] flex items-center justify-center text-sm flex-shrink-0">🏅</div>
+          <div className="flex-1">
+            <p className="text-[#e8f5e8] text-sm">{t("leaderboard")}</p>
+          </div>
+          <span className="text-[#6b9e6b] text-sm">›</span>
+        </Link>
+
+        {/* Sign out row */}
+        <button onClick={logout}
+          className="w-full flex items-center gap-3 px-4 py-3 hover:bg-[#1c0505] transition-colors text-left">
+          <div className="w-8 h-8 rounded-lg bg-[#7f1d1d30] flex items-center justify-center text-sm flex-shrink-0">🚪</div>
+          <span className="text-[#f87171] text-sm">{t("sign_out")}</span>
+        </button>
       </div>
     </div>
   );

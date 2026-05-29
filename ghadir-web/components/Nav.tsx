@@ -13,7 +13,6 @@ const NAV_ITEMS = [
   { href: "/dashboard",   icon: "👤", key: "profile"     },
   { href: "/redeem",      icon: "❤️", key: "hadiya"      },
   { href: "/campaigns",   icon: "🕌", key: "campaigns"   },
-  { href: "/shura",       icon: "⚖️", key: "shura"       },
   { href: "/leaderboard", icon: "🏅", key: "leaderboard" },
 ];
 

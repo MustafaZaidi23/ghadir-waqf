@@ -7,6 +7,7 @@ import Link from "next/link";
 import { useState, useEffect, useRef, useCallback } from "react";
 import { getTelegramWebApp, getTelegramUser, isInTelegram } from "@/lib/telegram";
 import { fetchPublicCampaigns, Campaign } from "./admin/actions";
+import { useLanguage } from "@/lib/i18n";
 
 interface RecentLog {
   id: string;
@@ -181,6 +182,7 @@ export default function Home() {
 
   const tgUser = getTelegramUser();
   const inTelegram = isInTelegram();
+  const { t } = useLanguage();
 
   // Auto-link Privy wallet to Telegram account on first connection
   useEffect(() => {
@@ -253,7 +255,7 @@ export default function Home() {
           </div>
         )}
         <div style={{ fontSize: 10, color: "rgba(255,255,255,0.4)", textTransform: "uppercase", letterSpacing: ".08em", marginBottom: 4 }}>
-          Your GHDR balance
+          {t("balance_label")}
         </div>
         <div style={{ fontFamily: "Georgia, serif", fontSize: "3rem", fontWeight: 500, color: "#E8D5A3", lineHeight: 1, transition: "all .3s" }}>
           {displayGhdr.toLocaleString(undefined, { maximumFractionDigits: 0 })}
@@ -268,14 +270,14 @@ export default function Home() {
         </div>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
           <div style={{ background: "rgba(0,0,0,0.2)", borderRadius: 10, padding: "10px 12px" }}>
-            <div style={{ fontSize: 10, color: "rgba(255,255,255,0.3)" }}>Daily cap used</div>
+            <div style={{ fontSize: 10, color: "rgba(255,255,255,0.3)" }}>{t("daily_cap")}</div>
             <div style={{ fontSize: 15, fontWeight: 600, color: "rgba(255,255,255,0.85)", marginTop: 3 }}>{dailyPct}%</div>
             <div style={{ marginTop: 6, height: 3, background: "rgba(255,255,255,0.1)", borderRadius: 2 }}>
               <div style={{ height: "100%", width: `${dailyPct}%`, background: cappedOut ? "#f87171" : "#52B788", borderRadius: 2, transition: "width .4s" }} />
             </div>
           </div>
           <div style={{ background: "rgba(0,0,0,0.2)", borderRadius: 10, padding: "10px 12px" }}>
-            <div style={{ fontSize: 10, color: "rgba(255,255,255,0.3)" }}>This session</div>
+            <div style={{ fontSize: 10, color: "rgba(255,255,255,0.3)" }}>{t("this_session")}</div>
             <div style={{ fontSize: 15, fontWeight: 600, color: "#4ade80", marginTop: 3 }}>
               {pending > 0 ? `${pending} tapped` : lastResult ? `+${lastResult.tokens} GHDR` : "—"}
             </div>
@@ -356,9 +358,9 @@ export default function Home() {
             </span>
           </div>
         ) : cappedOut ? (
-          <div style={{ fontSize: 11, color: "rgba(255,255,255,0.3)" }}>Daily cap reached · Come back tomorrow</div>
+          <div style={{ fontSize: 11, color: "rgba(255,255,255,0.3)" }}>{t("daily_cap_reached")}</div>
         ) : (
-          <div style={{ fontSize: 11, color: "rgba(255,255,255,0.3)" }}>Tap to log Salawat · +10 GHDR each</div>
+          <div style={{ fontSize: 11, color: "rgba(255,255,255,0.3)" }}>{t("tap_to_log")} · +10 {t("per_tap")}</div>
         )}
       </button>
 
@@ -397,10 +399,10 @@ export default function Home() {
       {/* Quick actions */}
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
         {[
-          { href: "/redeem",      icon: "❤️", title: "Redeem Hadiya",   sub: "Donate GHDR to charities" },
-          { href: "/campaigns",   icon: "📢", title: "Campaigns",       sub: "Active drives & events"    },
-          { href: "/leaderboard", icon: "🏅", title: "Leaderboard",     sub: "Top Salawat earners"       },
-          { href: "/dashboard",   icon: "📊", title: "Dashboard",       sub: "Balance, history & stats"  },
+          { href: "/redeem",      icon: "❤️", title: t("redeem_hadiya"),  sub: t("donate_ghdr")     },
+          { href: "/campaigns",   icon: "📢", title: t("campaigns"),      sub: t("events_drives")   },
+          { href: "/leaderboard", icon: "🏅", title: t("leaderboard"),    sub: t("top_earners")     },
+          { href: "/dashboard",   icon: "📊", title: t("your_profile"),   sub: t("salawat_history") },
         ].map((q) => (
           <Link key={q.href} href={q.href} style={{ background: "#111a11", border: "0.5px solid #1e3a1e", borderRadius: 14, padding: "16px 14px", textDecoration: "none", display: "block" }}>
             <div style={{ fontSize: 22, marginBottom: 6 }}>{q.icon}</div>
@@ -421,7 +423,7 @@ export default function Home() {
         <div className="card">
           <div style={{ padding: "0 14px" }}>
             <div style={{ fontSize: 11, fontWeight: 500, color: "#6b9e6b", textTransform: "uppercase", letterSpacing: ".07em", padding: "14px 0 8px" }}>
-              Recent activity
+              {t("recent_activity")}
             </div>
             {logs.map((log, i) => (
               <div key={log.id} style={{ display: "flex", alignItems: "center", gap: 10, padding: "9px 0", borderBottom: i < logs.length - 1 ? "0.5px solid #1e3a1e" : "none" }}>
