@@ -208,9 +208,9 @@ export default function Home() {
   if (!isConnected) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] gap-8 text-center px-4">
-        <div className="text-6xl">☽</div>
+        <img src="/brand-logo.png" alt="Ghadir Waqf" width={140} height={140} style={{ objectFit: "contain" }} />
         <div>
-          <h1 className="text-3xl font-bold text-[#22c55e] mb-3">Ghadir Waqf</h1>
+          <h1 style={{ fontFamily: "'Cinzel', serif", letterSpacing: "0.06em" }} className="text-3xl font-bold text-[#D4AF37] mb-3">GHADIR WAQF</h1>
           <p className="text-[#6b9e6b] max-w-sm mx-auto leading-relaxed">
             Send Salawat. Earn GHDR. Donate as hadiya —{" "}
             <span className="text-[#e8f5e8]">on-chain, permanent.</span>

@@ -62,9 +62,9 @@ export function Nav() {
         <div className="max-w-5xl mx-auto w-full flex items-center justify-between">
 
           {/* Logo */}
-          <Link href="/" style={{ textDecoration: "none", display: "flex", alignItems: "center", gap: 10, flexShrink: 0 }}>
-            {/* Brand mark */}
-            <img src="/icon.svg" alt="Ghadir" width={32} height={32} style={{ borderRadius: 7, flexShrink: 0 }} />
+          <Link href="/" style={{ textDecoration: "none", display: "flex", alignItems: "center", gap: 9, flexShrink: 0 }}>
+            {/* Brand mark — official Ghadir logo */}
+            <img src="/brand-logo.png" alt="Ghadir" width={34} height={34} style={{ flexShrink: 0, objectFit: "contain" }} />
             {/* Wordmark */}
             <span style={{ display: "flex", flexDirection: "column", lineHeight: 1 }}>
               <span style={{ fontFamily: "'Cinzel', serif", fontWeight: 700, fontSize: 15, color: "#D4AF37", letterSpacing: "0.06em" }}>GHADIR</span>
