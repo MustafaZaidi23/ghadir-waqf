@@ -7,6 +7,7 @@ import { useState, useEffect } from "react";
 import { fetchPublicCampaigns, Campaign } from "../admin/actions";
 
 const TOKENS_PER_DOLLAR = 1000n;
+const PRESETS = [1000, 5000, 10000, 25000];
 
 interface Charity {
   id: string;
@@ -101,7 +102,9 @@ export default function Redeem() {
     );
   }
 
-  const ghdr = balance ? Number(formatUnits(balance as bigint, 18)).toFixed(2) : "0";
+  const ghdrNum = balance ? Number(formatUnits(balance as bigint, 18)) : 0;
+  const ghdr = Math.floor(ghdrNum);
+  const maxAmount = Math.floor(ghdrNum / 1000) * 1000;
   const amountBN = amount ? parseUnits(amount, 18) : 0n;
   const usdValue = amount ? (Number(amount) / Number(TOKENS_PER_DOLLAR)).toFixed(2) : "0.00";
   const needsApproval = amountBN > 0n && (allowance as bigint ?? 0n) < amountBN;
@@ -135,7 +138,7 @@ export default function Redeem() {
         <div className="text-6xl">✅</div>
         <h2 className="text-2xl font-bold text-[#22c55e]">Hadiya accepted!</h2>
         <p className="text-[#6b9e6b]">
-          {amount} GHDR burned → ${usdValue} USDC donated to {selected?.name}.
+          {Number(amount).toLocaleString()} GHDR burned → ${usdValue} USDC donated to {selected?.name}.
         </p>
         {txHash && (
           <a href={`${EXPLORER}/tx/${txHash}`} target="_blank" rel="noopener noreferrer"
@@ -151,26 +154,26 @@ export default function Redeem() {
   }
 
   return (
-    <div className="space-y-8 max-w-2xl mx-auto">
+    <div className="space-y-6 max-w-2xl mx-auto">
       <h1 style={{ fontFamily: "'Cinzel', serif", letterSpacing: "0.04em" }} className="text-2xl font-bold text-[#D4AF37]">Redeem Hadiya</h1>
 
       <div className="card flex justify-between items-center">
         <span className="text-[#6b9e6b] text-sm">Your balance</span>
-        <span className="text-[#D4AF37] font-bold text-lg">{ghdr} GHDR</span>
+        <span style={{ fontFamily: "'Cinzel', serif" }} className="text-[#D4AF37] font-bold text-lg">{ghdr.toLocaleString()} GHDR</span>
       </div>
 
       {/* Campaign banner */}
       {linkedCampaign && (
-        <div style={{ background: "linear-gradient(90deg,#0a2016,#0f3b1f)", border: "1px solid #22c55e30", borderRadius: 12, padding: "12px 16px", display: "flex", alignItems: "center", gap: 12 }}>
+        <div style={{ background: "linear-gradient(90deg,#0a2016,#0f3b1f)", border: "1px solid #2F884F50", borderRadius: 12, padding: "12px 16px", display: "flex", alignItems: "center", gap: 12 }}>
           <span style={{ fontSize: 20, flexShrink: 0 }}>💰</span>
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ fontSize: 13, fontWeight: 600, color: "#e8f5e8" }}>{linkedCampaign.name}</div>
-            <div style={{ fontSize: 11, color: "#22c55e", marginTop: 2 }}>
-              You're participating · charity pre-selected below
+            <div style={{ fontSize: 11, color: "#52B788", marginTop: 2 }}>
+              You&apos;re participating · charity pre-selected below
               {linkedCampaign.target_usd && ` · $${Number(linkedCampaign.raised_usd ?? 0).toLocaleString()} / $${Number(linkedCampaign.target_usd).toLocaleString()} raised`}
             </div>
           </div>
-          <span style={{ fontSize: 18 }}>✓</span>
+          <span style={{ fontSize: 18, color: "#52B788" }}>✓</span>
         </div>
       )}
 
@@ -181,71 +184,155 @@ export default function Redeem() {
           <p className="text-[#6b9e6b] text-sm">Loading charities…</p>
         ) : (
           <div className="space-y-2">
-            {charities.map((c) => (
-              <button
-                key={c.id}
-                onClick={() => setSelected(c)}
-                className={`w-full text-left p-3 rounded-lg border transition-colors ${
-                  selected?.id === c.id
-                    ? "border-[#22c55e] bg-[#0d2b16]"
-                    : "border-[#1e3a1e] hover:border-[#22c55e] bg-[#0a0f0a]"
-                }`}
-              >
-                <div className="font-medium text-[#e8f5e8] text-sm">{c.name}</div>
-                <div className="text-[#6b9e6b] text-xs mt-0.5">
-                  {c.cause_category} · {c.country}
-                  {c.target_usd && ` · $${Number(c.funded_usd).toFixed(0)} / $${Number(c.target_usd).toFixed(0)}`}
-                </div>
-              </button>
-            ))}
+            {charities.map((c) => {
+              const pct = c.target_usd && Number(c.target_usd) > 0
+                ? Math.min(100, Math.round((Number(c.funded_usd) / Number(c.target_usd)) * 100))
+                : null;
+              const active = selected?.id === c.id;
+              return (
+                <button
+                  key={c.id}
+                  onClick={() => setSelected(c)}
+                  aria-pressed={active}
+                  className={`w-full text-left p-3 rounded-lg border transition-colors ${
+                    active
+                      ? "border-[#D4AF37] bg-[#0d2b16]"
+                      : "border-[#1e3a1e] hover:border-[#2F884F] bg-[#0a0f0a]"
+                  }`}
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="font-medium text-[#e8f5e8] text-sm">{c.name}</div>
+                    {active && <span style={{ color: "#D4AF37", fontSize: 13 }}>✓</span>}
+                  </div>
+                  <div className="text-[#6b9e6b] text-xs mt-0.5">{c.cause_category} · {c.country}</div>
+                  {pct !== null && (
+                    <div className="mt-2">
+                      <div style={{ display: "flex", justifyContent: "space-between", fontSize: 10, color: "#6b9e6b", marginBottom: 3 }}>
+                        <span style={{ color: "#52B788", fontWeight: 600 }}>${Number(c.funded_usd).toLocaleString()}</span>
+                        <span>of ${Number(c.target_usd).toLocaleString()} · {pct}%</span>
+                      </div>
+                      <div style={{ height: 4, background: "#1e3a1e", borderRadius: 2, overflow: "hidden" }}>
+                        <div style={{ height: "100%", width: `${pct}%`, background: "linear-gradient(90deg,#2F884F,#52B788)", borderRadius: 2 }} />
+                      </div>
+                    </div>
+                  )}
+                </button>
+              );
+            })}
           </div>
         )}
       </div>
 
       {/* Step 2: amount */}
       <div className="card space-y-4">
-        <h2 className="font-semibold text-[#e8f5e8]">2. Enter amount</h2>
-        <p className="text-[#6b9e6b] text-xs">Must be a multiple of 1,000 GHDR · Rate: 1,000 GHDR = $1 USDC</p>
-        <input
-          type="number"
-          min="1000"
-          step="1000"
-          placeholder="e.g. 1000"
-          value={amount}
-          onChange={(e) => setAmount(e.target.value)}
-          className="w-full bg-[#0a0f0a] border border-[#1e3a1e] rounded-lg px-4 py-2 text-[#e8f5e8] text-sm focus:outline-none focus:border-[#22c55e]"
-        />
-        {amount && !isMultiple && (
-          <p className="text-[#f87171] text-xs">Amount must be a multiple of 1,000</p>
-        )}
-        {amount && isMultiple && (
-          <p className="text-[#6b9e6b] text-xs">≈ ${usdValue} USDC will be donated</p>
+        <h2 className="font-semibold text-[#e8f5e8]">2. Choose amount</h2>
+        <p className="text-[#6b9e6b] text-xs">1,000 GHDR = $1 USDC · amounts must be in multiples of 1,000</p>
+
+        {maxAmount < 1000 ? (
+          <p className="text-[#f87171] text-sm">You need at least 1,000 GHDR to donate. Keep sending Salawat to earn more.</p>
+        ) : (
+          <>
+            {/* Preset chips */}
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+              {PRESETS.filter((p) => p <= maxAmount).map((p) => {
+                const on = Number(amount) === p;
+                return (
+                  <button
+                    key={p}
+                    onClick={() => setAmount(String(p))}
+                    aria-pressed={on}
+                    style={{
+                      flex: "1 1 0", minWidth: 70, padding: "10px 6px", borderRadius: 10,
+                      border: `1px solid ${on ? "#D4AF37" : "#1e3a1e"}`,
+                      background: on ? "rgba(212,175,55,0.12)" : "#0a0f0a",
+                      color: on ? "#D4AF37" : "#e8f5e8", fontWeight: 600, fontSize: 13, cursor: "pointer",
+                      transition: "all .12s",
+                    }}
+                  >
+                    {p.toLocaleString()}
+                    <div style={{ fontSize: 9, color: on ? "#D4AF37" : "#6b9e6b", fontWeight: 400, marginTop: 1 }}>
+                      ${(p / 1000).toLocaleString()}
+                    </div>
+                  </button>
+                );
+              })}
+              <button
+                onClick={() => setAmount(String(maxAmount))}
+                aria-pressed={Number(amount) === maxAmount}
+                style={{
+                  flex: "1 1 0", minWidth: 70, padding: "10px 6px", borderRadius: 10,
+                  border: `1px solid ${Number(amount) === maxAmount ? "#D4AF37" : "#1e3a1e"}`,
+                  background: Number(amount) === maxAmount ? "rgba(212,175,55,0.12)" : "#0a0f0a",
+                  color: Number(amount) === maxAmount ? "#D4AF37" : "#e8f5e8", fontWeight: 600, fontSize: 13, cursor: "pointer",
+                  transition: "all .12s",
+                }}
+              >
+                Max
+                <div style={{ fontSize: 9, color: "#6b9e6b", fontWeight: 400, marginTop: 1 }}>
+                  ${(maxAmount / 1000).toLocaleString()}
+                </div>
+              </button>
+            </div>
+
+            {/* Custom amount */}
+            <div>
+              <label htmlFor="ghdr-amount" className="text-[#6b9e6b] text-xs block mb-1.5">Or enter a custom amount (GHDR)</label>
+              <input
+                id="ghdr-amount"
+                type="number"
+                inputMode="numeric"
+                min="1000"
+                step="1000"
+                placeholder="e.g. 3000"
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+                className="w-full bg-[#0a0f0a] border border-[#1e3a1e] rounded-lg px-4 py-2.5 text-[#e8f5e8] text-sm focus:outline-none focus:border-[#D4AF37]"
+              />
+            </div>
+
+            {/* Live USD readout */}
+            {amount && isMultiple && hasEnough && (
+              <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", padding: "10px 14px", background: "rgba(47,136,79,0.08)", border: "1px solid rgba(47,136,79,0.25)", borderRadius: 10 }}>
+                <span style={{ fontSize: 12, color: "#6b9e6b" }}>You&apos;ll donate</span>
+                <span style={{ fontFamily: "'Cinzel', serif", fontSize: 22, fontWeight: 700, color: "#52B788" }}>${usdValue} <span style={{ fontSize: 12, color: "#6b9e6b", fontWeight: 400 }}>USDC</span></span>
+              </div>
+            )}
+            {amount && !isMultiple && (
+              <p className="text-[#f87171] text-xs">Amount must be a multiple of 1,000.</p>
+            )}
+            {amount && isMultiple && !hasEnough && (
+              <p className="text-[#f87171] text-xs">That&apos;s more than your balance ({ghdr.toLocaleString()} GHDR).</p>
+            )}
+          </>
         )}
       </div>
 
-      {/* Step 3: approve + redeem */}
+      {/* Step 3: confirm */}
       <div className="card space-y-4">
         <h2 className="font-semibold text-[#e8f5e8]">3. Confirm</h2>
         {!selected && <p className="text-[#6b9e6b] text-sm">Select a charity above first.</p>}
-        {selected && !canProceed && amount && (
-          <p className="text-[#f87171] text-sm">
-            {!isMultiple ? "Amount must be a multiple of 1,000." : "Insufficient balance."}
-          </p>
-        )}
+        {selected && !amount && <p className="text-[#6b9e6b] text-sm">Choose an amount above.</p>}
         {selected && canProceed && (
           <div className="space-y-3">
             <div className="text-sm text-[#6b9e6b] space-y-1">
               <div>Charity: <span className="text-[#e8f5e8]">{selected.name}</span></div>
-              <div>Burning: <span className="text-[#f87171]">{amount} GHDR</span></div>
-              <div>Donating: <span className="text-[#22c55e]">${usdValue} USDC</span></div>
+              <div>Burning: <span className="text-[#f87171]">{Number(amount).toLocaleString()} GHDR</span></div>
+              <div>Donating: <span className="text-[#52B788]">${usdValue} USDC</span></div>
             </div>
+
+            {needsApproval && (
+              <p className="text-[#6b9e6b] text-xs" style={{ background: "#0d1a0d", border: "1px solid #1e3a1e", borderRadius: 8, padding: "8px 12px" }}>
+                ℹ️ This donation needs <strong className="text-[#e8f5e8]">2 confirmations</strong> — approve GHDR once, then confirm the donation. Both are on-chain.
+              </p>
+            )}
+
             {needsApproval ? (
               <button
                 className="btn-primary w-full"
                 onClick={handleApprove}
                 disabled={isPending || step === "approving"}
               >
-                {step === "approving" && !txConfirmed ? "Approving…" : "Step 1: Approve GHDR"}
+                {step === "approving" && !txConfirmed ? "Approving…" : "Step 1 of 2: Approve GHDR"}
               </button>
             ) : (
               <button
@@ -253,7 +340,7 @@ export default function Redeem() {
                 onClick={handleRedeem}
                 disabled={isPending || step === "redeeming"}
               >
-                {step === "redeeming" && !txConfirmed ? "Redeeming…" : "Confirm Hadiya"}
+                {step === "redeeming" && !txConfirmed ? "Sending hadiya…" : "Confirm Hadiya"}
               </button>
             )}
           </div>
