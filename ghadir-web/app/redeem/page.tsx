@@ -5,6 +5,7 @@ import { formatUnits, parseUnits } from "viem";
 import { SALAWAT_TOKEN, HADIYA_REDEMPTION, SALAWAT_ABI, REDEMPTION_ABI, EXPLORER } from "@/lib/contracts";
 import { useState, useEffect } from "react";
 import { fetchPublicCampaigns, Campaign } from "../admin/actions";
+import { useLanguage } from "@/lib/i18n";
 
 const TOKENS_PER_DOLLAR = 1000n;
 const PRESETS = [1000, 5000, 10000, 25000];
@@ -23,6 +24,7 @@ interface Charity {
 export default function Redeem() {
   const { address, isConnected } = useAccount();
   const { login } = usePrivy();
+  const { t } = useLanguage();
   const [charities, setCharities] = useState<Charity[]>([]);
   const [selected, setSelected] = useState<Charity | null>(null);
   const [amount, setAmount] = useState("");
@@ -94,10 +96,10 @@ export default function Redeem() {
   if (!isConnected) {
     return (
       <div className="flex flex-col items-center justify-center gap-6 py-24 text-center">
-        <div className="text-5xl">💚</div>
-        <h2 className="text-2xl font-bold text-[#e8f5e8]">Sign in to redeem hadiya</h2>
-        <p className="text-[#6b9e6b]">Use email, Google, or your Celo wallet — no seed phrase needed.</p>
-        <button onClick={login} className="btn-primary px-6 py-2">Sign In</button>
+        <div aria-hidden="true" className="text-5xl">💚</div>
+        <h2 className="text-2xl font-bold text-[#e8f5e8]">{t("signin_redeem")}</h2>
+        <p className="text-[#6b9e6b]">{t("signin_sub")}</p>
+        <button onClick={login} className="btn-primary px-6 py-2">{t("sign_in")}</button>
       </div>
     );
   }
@@ -135,19 +137,20 @@ export default function Redeem() {
   if (step === "done") {
     return (
       <div className="flex flex-col items-center justify-center gap-6 py-24 text-center">
-        <div className="text-6xl">✅</div>
-        <h2 className="text-2xl font-bold text-[#22c55e]">Hadiya accepted!</h2>
+        <div aria-hidden="true" className="text-6xl">✅</div>
+        <h2 className="text-2xl font-bold text-[#22c55e]">{t("hadiya_accepted")}</h2>
         <p className="text-[#6b9e6b]">
-          {Number(amount).toLocaleString()} GHDR burned → ${usdValue} USDC donated to {selected?.name}.
+          {t("burning")}: <span className="text-[#f87171]">{Number(amount).toLocaleString()} GHDR</span>
+          {" · "}{t("donating")}: <span className="text-[#52B788]">${usdValue} USDC</span> → {selected?.name}
         </p>
         {txHash && (
           <a href={`${EXPLORER}/tx/${txHash}`} target="_blank" rel="noopener noreferrer"
             className="text-[#16a34a] hover:underline text-sm">
-            View transaction ↗
+            {t("view_transaction")}
           </a>
         )}
         <button className="btn-primary" onClick={() => { setStep("idle"); setAmount(""); setSelected(null); }}>
-          Redeem again
+          {t("give_again")}
         </button>
       </div>
     );
@@ -155,22 +158,22 @@ export default function Redeem() {
 
   return (
     <div className="space-y-6 max-w-2xl mx-auto">
-      <h1 style={{ fontFamily: "'Cinzel', serif", letterSpacing: "0.04em" }} className="text-2xl font-bold text-[#D4AF37]">Redeem Hadiya</h1>
+      <h1 style={{ fontFamily: "'Cinzel', serif", letterSpacing: "0.04em" }} className="text-2xl font-bold text-[#D4AF37]">{t("redeem_hadiya")}</h1>
 
       <div className="card flex justify-between items-center">
-        <span className="text-[#6b9e6b] text-sm">Your balance</span>
+        <span className="text-[#6b9e6b] text-sm">{t("your_balance")}</span>
         <span style={{ fontFamily: "'Cinzel', serif" }} className="text-[#D4AF37] font-bold text-lg">{ghdr.toLocaleString()} GHDR</span>
       </div>
 
       {/* Campaign banner */}
       {linkedCampaign && (
         <div style={{ background: "linear-gradient(90deg,#0a2016,#0f3b1f)", border: "1px solid #2F884F50", borderRadius: 12, padding: "12px 16px", display: "flex", alignItems: "center", gap: 12 }}>
-          <span style={{ fontSize: 20, flexShrink: 0 }}>💰</span>
+          <span aria-hidden="true" style={{ fontSize: 20, flexShrink: 0 }}>💰</span>
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ fontSize: 13, fontWeight: 600, color: "#e8f5e8" }}>{linkedCampaign.name}</div>
             <div style={{ fontSize: 11, color: "#52B788", marginTop: 2 }}>
-              You&apos;re participating · charity pre-selected below
-              {linkedCampaign.target_usd && ` · $${Number(linkedCampaign.raised_usd ?? 0).toLocaleString()} / $${Number(linkedCampaign.target_usd).toLocaleString()} raised`}
+              {t("participating_preselect")}
+              {linkedCampaign.target_usd && ` · $${Number(linkedCampaign.raised_usd ?? 0).toLocaleString()} / $${Number(linkedCampaign.target_usd).toLocaleString()} ${t("raised")}`}
             </div>
           </div>
           <span style={{ fontSize: 18, color: "#52B788" }}>✓</span>
@@ -179,9 +182,9 @@ export default function Redeem() {
 
       {/* Step 1: pick charity */}
       <div className="card space-y-4">
-        <h2 className="font-semibold text-[#e8f5e8]">1. Choose a charity</h2>
+        <h2 className="font-semibold text-[#e8f5e8]">1. {t("choose_charity")}</h2>
         {charities.length === 0 ? (
-          <p className="text-[#6b9e6b] text-sm">Loading charities…</p>
+          <p className="text-[#6b9e6b] text-sm">{t("loading_charities")}</p>
         ) : (
           <div className="space-y-2">
             {charities.map((c) => {
@@ -209,7 +212,7 @@ export default function Redeem() {
                     <div className="mt-2">
                       <div style={{ display: "flex", justifyContent: "space-between", fontSize: 10, color: "#6b9e6b", marginBottom: 3 }}>
                         <span style={{ color: "#52B788", fontWeight: 600 }}>${Number(c.funded_usd).toLocaleString()}</span>
-                        <span>of ${Number(c.target_usd).toLocaleString()} · {pct}%</span>
+                        <span>{t("of")} ${Number(c.target_usd).toLocaleString()} · {pct}%</span>
                       </div>
                       <div style={{ height: 4, background: "#1e3a1e", borderRadius: 2, overflow: "hidden" }}>
                         <div style={{ height: "100%", width: `${pct}%`, background: "linear-gradient(90deg,#2F884F,#52B788)", borderRadius: 2 }} />
@@ -225,11 +228,11 @@ export default function Redeem() {
 
       {/* Step 2: amount */}
       <div className="card space-y-4">
-        <h2 className="font-semibold text-[#e8f5e8]">2. Choose amount</h2>
-        <p className="text-[#6b9e6b] text-xs">1,000 GHDR = $1 USDC · amounts must be in multiples of 1,000</p>
+        <h2 className="font-semibold text-[#e8f5e8]">2. {t("select_amount")}</h2>
+        <p className="text-[#6b9e6b] text-xs">{t("amount_help")}</p>
 
         {maxAmount < 1000 ? (
-          <p className="text-[#f87171] text-sm">You need at least 1,000 GHDR to donate. Keep sending Salawat to earn more.</p>
+          <p className="text-[#f87171] text-sm">{t("need_min")}</p>
         ) : (
           <>
             {/* Preset chips */}
@@ -267,7 +270,7 @@ export default function Redeem() {
                   transition: "all .12s",
                 }}
               >
-                Max
+                {t("max_label")}
                 <div style={{ fontSize: 9, color: "#6b9e6b", fontWeight: 400, marginTop: 1 }}>
                   ${(maxAmount / 1000).toLocaleString()}
                 </div>
@@ -276,14 +279,14 @@ export default function Redeem() {
 
             {/* Custom amount */}
             <div>
-              <label htmlFor="ghdr-amount" className="text-[#6b9e6b] text-xs block mb-1.5">Or enter a custom amount (GHDR)</label>
+              <label htmlFor="ghdr-amount" className="text-[#6b9e6b] text-xs block mb-1.5">{t("custom_amount")}</label>
               <input
                 id="ghdr-amount"
                 type="number"
                 inputMode="numeric"
                 min="1000"
                 step="1000"
-                placeholder="e.g. 3000"
+                placeholder={t("eg_amount")}
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
                 className="w-full bg-[#0a0f0a] border border-[#1e3a1e] rounded-lg px-4 py-2.5 text-[#e8f5e8] text-sm focus:outline-none focus:border-[#D4AF37]"
@@ -293,15 +296,15 @@ export default function Redeem() {
             {/* Live USD readout */}
             {amount && isMultiple && hasEnough && (
               <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", padding: "10px 14px", background: "rgba(47,136,79,0.08)", border: "1px solid rgba(47,136,79,0.25)", borderRadius: 10 }}>
-                <span style={{ fontSize: 12, color: "#6b9e6b" }}>You&apos;ll donate</span>
+                <span style={{ fontSize: 12, color: "#6b9e6b" }}>{t("youll_donate")}</span>
                 <span style={{ fontFamily: "'Cinzel', serif", fontSize: 22, fontWeight: 700, color: "#52B788" }}>${usdValue} <span style={{ fontSize: 12, color: "#6b9e6b", fontWeight: 400 }}>USDC</span></span>
               </div>
             )}
             {amount && !isMultiple && (
-              <p className="text-[#f87171] text-xs">Amount must be a multiple of 1,000.</p>
+              <p className="text-[#f87171] text-xs">{t("must_multiple")}</p>
             )}
             {amount && isMultiple && !hasEnough && (
-              <p className="text-[#f87171] text-xs">That&apos;s more than your balance ({ghdr.toLocaleString()} GHDR).</p>
+              <p className="text-[#f87171] text-xs">{t("over_balance")} ({ghdr.toLocaleString()} GHDR).</p>
             )}
           </>
         )}
@@ -309,20 +312,20 @@ export default function Redeem() {
 
       {/* Step 3: confirm */}
       <div className="card space-y-4">
-        <h2 className="font-semibold text-[#e8f5e8]">3. Confirm</h2>
-        {!selected && <p className="text-[#6b9e6b] text-sm">Select a charity above first.</p>}
-        {selected && !amount && <p className="text-[#6b9e6b] text-sm">Choose an amount above.</p>}
+        <h2 className="font-semibold text-[#e8f5e8]">3. {t("confirm_step")}</h2>
+        {!selected && <p className="text-[#6b9e6b] text-sm">{t("select_charity_first")}</p>}
+        {selected && !amount && <p className="text-[#6b9e6b] text-sm">{t("choose_amount_first")}</p>}
         {selected && canProceed && (
           <div className="space-y-3">
             <div className="text-sm text-[#6b9e6b] space-y-1">
-              <div>Charity: <span className="text-[#e8f5e8]">{selected.name}</span></div>
-              <div>Burning: <span className="text-[#f87171]">{Number(amount).toLocaleString()} GHDR</span></div>
-              <div>Donating: <span className="text-[#52B788]">${usdValue} USDC</span></div>
+              <div>{t("charity_label")}: <span className="text-[#e8f5e8]">{selected.name}</span></div>
+              <div>{t("burning")}: <span className="text-[#f87171]">{Number(amount).toLocaleString()} GHDR</span></div>
+              <div>{t("donating")}: <span className="text-[#52B788]">${usdValue} USDC</span></div>
             </div>
 
             {needsApproval && (
               <p className="text-[#6b9e6b] text-xs" style={{ background: "#0d1a0d", border: "1px solid #1e3a1e", borderRadius: 8, padding: "8px 12px" }}>
-                ℹ️ This donation needs <strong className="text-[#e8f5e8]">2 confirmations</strong> — approve GHDR once, then confirm the donation. Both are on-chain.
+                <span aria-hidden="true">ℹ️ </span>{t("two_tx_explainer")}
               </p>
             )}
 
@@ -332,7 +335,7 @@ export default function Redeem() {
                 onClick={handleApprove}
                 disabled={isPending || step === "approving"}
               >
-                {step === "approving" && !txConfirmed ? "Approving…" : "Step 1 of 2: Approve GHDR"}
+                {step === "approving" && !txConfirmed ? t("approving") : t("approve_step")}
               </button>
             ) : (
               <button
@@ -340,7 +343,7 @@ export default function Redeem() {
                 onClick={handleRedeem}
                 disabled={isPending || step === "redeeming"}
               >
-                {step === "redeeming" && !txConfirmed ? "Sending hadiya…" : "Confirm Hadiya"}
+                {step === "redeeming" && !txConfirmed ? t("sending_hadiya") : t("confirm_hadiya")}
               </button>
             )}
           </div>

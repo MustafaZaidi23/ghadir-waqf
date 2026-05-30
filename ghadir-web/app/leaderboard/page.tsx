@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useAccount } from "wagmi";
+import { useLanguage } from "@/lib/i18n";
 
 interface LeaderEntry {
   username: string | null;
@@ -12,6 +13,7 @@ interface LeaderEntry {
 
 export default function Leaderboard() {
   const { address } = useAccount();
+  const { t } = useLanguage();
   const [entries, setEntries] = useState<LeaderEntry[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -47,16 +49,16 @@ export default function Leaderboard() {
   return (
     <div className="space-y-7">
       <div>
-        <h1 style={{ fontFamily: "'Cinzel', serif", letterSpacing: "0.04em" }} className="text-2xl font-bold text-[#D4AF37]">Leaderboard</h1>
-        <p className="text-[#6b9e6b] text-sm mt-1">Top Salawat senders in the Ghadir community</p>
+        <h1 style={{ fontFamily: "'Cinzel', serif", letterSpacing: "0.04em" }} className="text-2xl font-bold text-[#D4AF37]">{t("leaderboard")}</h1>
+        <p className="text-[#6b9e6b] text-sm mt-1">{t("leaderboard_subtitle")}</p>
       </div>
 
       {loading ? (
-        <div className="card text-center py-12 text-[#6b9e6b]">Loading…</div>
+        <div className="card text-center py-12 text-[#6b9e6b]">{t("loading")}</div>
       ) : entries.length === 0 ? (
         <div className="card text-center py-12 space-y-3">
-          <div className="text-4xl">🕌</div>
-          <p className="text-[#6b9e6b]">No entries yet. Be the first to send Salawat!</p>
+          <div aria-hidden="true" className="text-4xl">🕌</div>
+          <p className="text-[#6b9e6b]">{t("no_entries")}</p>
         </div>
       ) : (
         <>
@@ -71,12 +73,12 @@ export default function Leaderboard() {
                 {myIndex < 3 ? medals[myIndex] : `#${myIndex + 1}`}
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: 13, fontWeight: 600, color: "#e8f5e8" }}>Your rank</div>
+                <div style={{ fontSize: 13, fontWeight: 600, color: "#e8f5e8" }}>{t("your_rank")}</div>
                 <div style={{ fontSize: 11, color: "#6b9e6b", marginTop: 1 }}>{displayName(entries[myIndex])}</div>
               </div>
               <div style={{ textAlign: "right" }}>
                 <div style={{ fontSize: 15, fontWeight: 700, color: "#D4AF37" }}>{Number(entries[myIndex].total_salawat).toLocaleString()}</div>
-                <div style={{ fontSize: 10, color: "#6b9e6b" }}>Salawat</div>
+                <div style={{ fontSize: 10, color: "#6b9e6b" }}>{t("lifetime_salawat")}</div>
               </div>
             </div>
           )}
@@ -100,11 +102,11 @@ export default function Leaderboard() {
                   <div style={{ fontSize: 12, fontWeight: 600, color: "#e8f5e8", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", padding: "0 2px" }}>
                     {displayName(e)}
                   </div>
-                  {mine && <div style={{ fontSize: 9, color: "#D4AF37", fontWeight: 700, letterSpacing: "0.05em", marginTop: 2 }}>YOU</div>}
+                  {mine && <div style={{ fontSize: 9, color: "#D4AF37", fontWeight: 700, letterSpacing: "0.05em", marginTop: 2 }}>{t("you_badge")}</div>}
                   <div style={{ fontFamily: "'Cinzel', serif", fontSize: first ? 20 : 16, fontWeight: 700, color: "#D4AF37", marginTop: 6 }}>
                     {Number(e.total_salawat).toLocaleString()}
                   </div>
-                  <div style={{ fontSize: 9, color: "#6b9e6b", textTransform: "uppercase", letterSpacing: "0.05em" }}>Salawat</div>
+                  <div style={{ fontSize: 9, color: "#6b9e6b", textTransform: "uppercase", letterSpacing: "0.05em" }}>{t("lifetime_salawat")}</div>
                 </div>
               );
             })}
@@ -117,10 +119,10 @@ export default function Leaderboard() {
                 <thead>
                   <tr className="border-b border-[#1e3a1e]">
                     <th className="text-left px-4 py-3 text-[#6b9e6b] font-medium w-12">#</th>
-                    <th className="text-left px-4 py-3 text-[#6b9e6b] font-medium">User</th>
-                    <th className="text-right px-4 py-3 text-[#6b9e6b] font-medium">Salawat</th>
-                    <th className="text-right px-4 py-3 text-[#6b9e6b] font-medium hidden sm:table-cell">GHDR Earned</th>
-                    <th className="text-right px-4 py-3 text-[#6b9e6b] font-medium hidden md:table-cell">Wallet</th>
+                    <th className="text-left px-4 py-3 text-[#6b9e6b] font-medium">{t("user_col")}</th>
+                    <th className="text-right px-4 py-3 text-[#6b9e6b] font-medium">{t("lifetime_salawat")}</th>
+                    <th className="text-right px-4 py-3 text-[#6b9e6b] font-medium hidden sm:table-cell">{t("ghdr_earned")}</th>
+                    <th className="text-right px-4 py-3 text-[#6b9e6b] font-medium hidden md:table-cell">{t("wallet_col")}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -136,7 +138,7 @@ export default function Leaderboard() {
                         <td className="px-4 py-3 text-center text-[#6b9e6b]">{rank}</td>
                         <td className="px-4 py-3 font-medium" style={{ color: mine ? "#D4AF37" : "#e8f5e8" }}>
                           {displayName(e)}
-                          {mine && <span style={{ fontSize: 9, color: "#D4AF37", fontWeight: 700, marginLeft: 6, letterSpacing: "0.05em" }}>YOU</span>}
+                          {mine && <span style={{ fontSize: 9, color: "#D4AF37", fontWeight: 700, marginLeft: 6, letterSpacing: "0.05em" }}>{t("you_badge")}</span>}
                         </td>
                         <td className="px-4 py-3 text-right text-[#D4AF37] font-bold">{Number(e.total_salawat).toLocaleString()}</td>
                         <td className="px-4 py-3 text-right text-[#52B788] hidden sm:table-cell">{Number(e.total_tokens).toLocaleString()} GHDR</td>
