@@ -30,6 +30,8 @@ export default function Redeem() {
   const [amount, setAmount] = useState("");
   const [step, setStep] = useState<"idle" | "approving" | "redeeming" | "done">("idle");
   const [linkedCampaign, setLinkedCampaign] = useState<Campaign | null>(null);
+  const [profile, setProfile] = useState<{ username: string | null; first_name: string | null } | null>(null);
+  const profileLabel = profile?.username ? `@${profile.username}` : profile?.first_name ?? null;
 
   const { data: balance } = useReadContract({
     address: SALAWAT_TOKEN, abi: SALAWAT_ABI,
@@ -51,6 +53,12 @@ export default function Redeem() {
   useEffect(() => {
     fetch("/api/charities").then((r) => r.json()).then((d) => setCharities(Array.isArray(d) ? d : []));
   }, []);
+
+  // Load linked profile (username) for the signed-in wallet
+  useEffect(() => {
+    if (!address) return;
+    fetch(`/api/me?wallet=${address}`).then((r) => r.json()).then(setProfile).catch(() => {});
+  }, [address]);
 
   // Check if wallet has joined a fundraising campaign with a linked charity
   useEffect(() => {
@@ -170,8 +178,11 @@ export default function Redeem() {
       <h1 style={{ fontFamily: "'Cinzel', serif", letterSpacing: "0.04em" }} className="text-2xl font-bold text-[#D4AF37]">{t("redeem_hadiya")}</h1>
 
       <div className="card flex justify-between items-center">
-        <span className="text-[#6b9e6b] text-sm">{t("your_balance")}</span>
-        <span style={{ fontFamily: "'Cinzel', serif" }} className="text-[#D4AF37] font-bold text-lg">{ghdr.toLocaleString()} GHDR</span>
+        <div className="min-w-0">
+          <span className="text-[#6b9e6b] text-sm">{t("your_balance")}</span>
+          {profileLabel && <div className="text-[#e8f5e8] text-xs mt-0.5 truncate">{profileLabel}</div>}
+        </div>
+        <span style={{ fontFamily: "'Cinzel', serif" }} className="text-[#D4AF37] font-bold text-lg whitespace-nowrap">{ghdr.toLocaleString()} GHDR</span>
       </div>
 
       {/* Campaign banner */}

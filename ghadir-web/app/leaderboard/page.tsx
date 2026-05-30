@@ -36,6 +36,11 @@ export default function Leaderboard() {
   const shortWallet = (w: string | null) =>
     w ? `${w.slice(0, 6)}…${w.slice(-4)}` : "—";
 
+  // Short wallet to show *beneath* the name — only when the name isn't already
+  // the wallet itself (i.e. the entry has a username or first name).
+  const subWallet = (e: LeaderEntry) =>
+    (e.username || e.first_name) && e.wallet_address ? shortWallet(e.wallet_address) : "";
+
   const isMe = (e: LeaderEntry) =>
     !!address && !!e.wallet_address && e.wallet_address.toLowerCase() === address.toLowerCase();
 
@@ -74,7 +79,12 @@ export default function Leaderboard() {
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontSize: 13, fontWeight: 600, color: "#e8f5e8" }}>{t("your_rank")}</div>
-                <div style={{ fontSize: 11, color: "#6b9e6b", marginTop: 1 }}>{displayName(entries[myIndex])}</div>
+                <div style={{ fontSize: 11, color: "#6b9e6b", marginTop: 1 }}>
+                  {displayName(entries[myIndex])}
+                  {subWallet(entries[myIndex]) && (
+                    <span style={{ fontFamily: "monospace", marginLeft: 6, opacity: 0.75 }}>· {subWallet(entries[myIndex])}</span>
+                  )}
+                </div>
               </div>
               <div style={{ textAlign: "right" }}>
                 <div style={{ fontSize: 15, fontWeight: 700, color: "#D4AF37" }}>{Number(entries[myIndex].total_salawat).toLocaleString()}</div>
@@ -102,6 +112,7 @@ export default function Leaderboard() {
                   <div style={{ fontSize: 12, fontWeight: 600, color: "#e8f5e8", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", padding: "0 2px" }}>
                     {displayName(e)}
                   </div>
+                  {subWallet(e) && <div style={{ fontSize: 9, color: "#6b9e6b", fontFamily: "monospace", marginTop: 1 }}>{subWallet(e)}</div>}
                   {mine && <div style={{ fontSize: 9, color: "#D4AF37", fontWeight: 700, letterSpacing: "0.05em", marginTop: 2 }}>{t("you_badge")}</div>}
                   <div style={{ fontFamily: "'Cinzel', serif", fontSize: first ? 20 : 16, fontWeight: 700, color: "#D4AF37", marginTop: 6 }}>
                     {Number(e.total_salawat).toLocaleString()}
@@ -139,6 +150,7 @@ export default function Leaderboard() {
                         <td className="px-4 py-3 font-medium" style={{ color: mine ? "#D4AF37" : "#e8f5e8" }}>
                           {displayName(e)}
                           {mine && <span style={{ fontSize: 9, color: "#D4AF37", fontWeight: 700, marginLeft: 6, letterSpacing: "0.05em" }}>{t("you_badge")}</span>}
+                          {subWallet(e) && <div className="md:hidden text-[#6b9e6b] font-mono text-[10px] mt-0.5">{subWallet(e)}</div>}
                         </td>
                         <td className="px-4 py-3 text-right text-[#D4AF37] font-bold">{Number(e.total_salawat).toLocaleString()}</td>
                         <td className="px-4 py-3 text-right text-[#52B788] hidden sm:table-cell">{Number(e.total_tokens).toLocaleString()} GHDR</td>

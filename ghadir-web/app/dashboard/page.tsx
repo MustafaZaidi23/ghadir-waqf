@@ -39,9 +39,15 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(false);
   const [linkStatus, setLinkStatus] = useState<"idle" | "linking" | "linked" | "error">("idle");
   const [myCampaigns, setMyCampaigns] = useState<Campaign[]>([]);
+  const [profile, setProfile] = useState<{ username: string | null; first_name: string | null } | null>(null);
 
   const tgUser = getTelegramUser();
   const inTelegram = isInTelegram();
+
+  // Prefer the live Telegram identity, fall back to the linked DB profile
+  const handle = tgUser?.username ?? profile?.username ?? null;
+  const fname = tgUser?.first_name ?? profile?.first_name ?? null;
+  const profileLabel = handle ? `@${handle}` : fname;
 
   const { data: balance } = useReadContract({
     address: SALAWAT_TOKEN,
@@ -81,6 +87,12 @@ export default function Dashboard() {
       .then((r) => r.json())
       .then((data) => setLogs(Array.isArray(data) ? data : []))
       .finally(() => setLoading(false));
+  }, [address]);
+
+  // Load linked profile (username) for this wallet
+  useEffect(() => {
+    if (!address) return;
+    fetch(`/api/me?wallet=${address}`).then(r => r.json()).then(setProfile).catch(() => {});
   }, [address]);
 
   // Load joined campaigns
@@ -322,7 +334,8 @@ export default function Dashboard() {
           <div className="w-8 h-8 rounded-lg bg-[#0d2b16] flex items-center justify-center text-sm flex-shrink-0">💼</div>
           <div className="flex-1 min-w-0">
             <p className="text-xs text-[#6b9e6b]">{t("connected_wallet")}</p>
-            <p className="text-[#e8f5e8] text-xs font-mono truncate mt-0.5">{address}</p>
+            {profileLabel && <p className="text-[#e8f5e8] text-sm font-medium mt-0.5 truncate">{profileLabel}</p>}
+            <p className="text-[#6b9e6b] text-xs font-mono truncate mt-0.5">{address}</p>
           </div>
         </div>
 
