@@ -8,6 +8,7 @@ import Link from "next/link";
 import { getTelegramUser, getTelegramWebApp, isInTelegram } from "@/lib/telegram";
 import { fetchPublicCampaigns, Campaign } from "../admin/actions";
 import { useLanguage, LANG_META, Lang } from "@/lib/i18n";
+import { useCountry, flagEmoji } from "@/lib/country";
 
 interface SalawatLog {
   id: string;
@@ -35,6 +36,7 @@ export default function Dashboard() {
   const { address, isConnected } = useAccount();
   const { login, logout } = usePrivy();
   const { lang, setLang, t } = useLanguage();
+  const { country, current: currentCountry, countries, setCountry } = useCountry();
   const [logs, setLogs] = useState<SalawatLog[]>([]);
   const [loading, setLoading] = useState(false);
   const [linkStatus, setLinkStatus] = useState<"idle" | "linking" | "linked" | "error">("idle");
@@ -423,6 +425,41 @@ export default function Dashboard() {
             )}
           </div>
         )}
+
+        {/* Country row — expands inline */}
+        <details className="group border-b border-[#1e3a1e]">
+          <summary className="flex items-center gap-3 px-4 py-3 cursor-pointer list-none">
+            <div className="w-8 h-8 rounded-lg bg-[#0d2b16] flex items-center justify-center text-sm flex-shrink-0" aria-hidden="true">📍</div>
+            <div className="flex-1 min-w-0">
+              <p className="text-xs text-[#6b9e6b]">{t("country")}</p>
+              <p className="text-[#e8f5e8] text-sm mt-0.5">
+                {currentCountry
+                  ? `${flagEmoji(currentCountry.code)} ${currentCountry.name}`
+                  : country
+                  ? `${flagEmoji(country)} ${country}`
+                  : t("select_country")}
+              </p>
+            </div>
+            <span className="text-[#6b9e6b] text-xs group-open:rotate-180 transition-transform">▾</span>
+          </summary>
+          <div className="px-4 pb-3 space-y-2">
+            <p className="text-[10px] text-[#6b9e6b]">{t("country_help")}</p>
+            <div className="grid grid-cols-2 gap-2">
+              {countries.map((c) => (
+                <button key={c.code} onClick={() => setCountry(c.code)}
+                  className={`flex items-center gap-2 px-3 py-2 rounded-lg border text-sm transition-all ${
+                    country === c.code
+                      ? "bg-[#0d2b16] border-[#22c55e50] text-[#22c55e] font-medium"
+                      : "border-[#1e3a1e] text-[#6b9e6b] hover:border-[#2d4a2d] hover:text-[#e8f5e8]"
+                  }`}>
+                  <span aria-hidden="true">{flagEmoji(c.code)}</span>
+                  <span className="truncate">{c.name}</span>
+                  {country === c.code && <span className="ml-auto text-[#22c55e] text-xs">✓</span>}
+                </button>
+              ))}
+            </div>
+          </div>
+        </details>
 
         {/* Language row — expands inline */}
         <details className="group border-b border-[#1e3a1e]">

@@ -6,6 +6,7 @@ import { SALAWAT_TOKEN, HADIYA_REDEMPTION, SALAWAT_ABI, REDEMPTION_ABI, EXPLORER
 import { useState, useEffect } from "react";
 import { fetchPublicCampaigns, Campaign } from "../admin/actions";
 import { useLanguage } from "@/lib/i18n";
+import { useCountry, flagEmoji } from "@/lib/country";
 
 const TOKENS_PER_DOLLAR = 1000n;
 const PRESETS = [1000, 5000, 10000, 25000];
@@ -16,6 +17,7 @@ interface Charity {
   description: string;
   cause_category: string;
   country: string;
+  country_code: string | null;
   wallet_address: string;
   funded_usd: number;
   target_usd: number | null;
@@ -25,6 +27,7 @@ export default function Redeem() {
   const { address, isConnected } = useAccount();
   const { login } = usePrivy();
   const { t } = useLanguage();
+  const { country, current: currentCountry } = useCountry();
   const [charities, setCharities] = useState<Charity[]>([]);
   const [selected, setSelected] = useState<Charity | null>(null);
   const [amount, setAmount] = useState("");
@@ -32,6 +35,15 @@ export default function Redeem() {
   const [linkedCampaign, setLinkedCampaign] = useState<Campaign | null>(null);
   const [profile, setProfile] = useState<{ username: string | null; display_name: string | null; first_name: string | null } | null>(null);
   const profileLabel = profile?.username ? `@${profile.username}` : profile?.display_name ?? profile?.first_name ?? null;
+
+  // A charity counts as "local" if its country matches the user's chosen country
+  const isLocal = (c: Charity) =>
+    !!country && (
+      (!!c.country_code && c.country_code.toUpperCase() === country) ||
+      (!!currentCountry && !!c.country && c.country.toLowerCase() === currentCountry.name.toLowerCase())
+    );
+  // Surface causes in the user's country first
+  const sortedCharities = [...charities].sort((a, b) => Number(isLocal(b)) - Number(isLocal(a)));
 
   const { data: balance } = useReadContract({
     address: SALAWAT_TOKEN, abi: SALAWAT_ABI,
@@ -207,7 +219,7 @@ export default function Redeem() {
           <p className="text-[#6b9e6b] text-sm">{t("loading_charities")}</p>
         ) : (
           <div className="space-y-2">
-            {charities.map((c) => {
+            {sortedCharities.map((c) => {
               const pct = c.target_usd && Number(c.target_usd) > 0
                 ? Math.min(100, Math.round((Number(c.funded_usd) / Number(c.target_usd)) * 100))
                 : null;
@@ -227,7 +239,10 @@ export default function Redeem() {
                     <div className="font-medium text-[#e8f5e8] text-sm">{c.name}</div>
                     {active && <span style={{ color: "#D4AF37", fontSize: 13 }}>✓</span>}
                   </div>
-                  <div className="text-[#6b9e6b] text-xs mt-0.5">{c.cause_category} · {c.country}</div>
+                  <div className="text-[#6b9e6b] text-xs mt-0.5">
+                    {c.cause_category} · {isLocal(c) && <span aria-hidden="true">{flagEmoji(c.country_code || country)} </span>}{c.country}
+                    {isLocal(c) && <span className="ml-1.5 text-[#D4AF37]" style={{ fontSize: 10 }}>· {t("in_your_country")}</span>}
+                  </div>
                   {pct !== null && (
                     <div className="mt-2">
                       <div style={{ display: "flex", justifyContent: "space-between", fontSize: 10, color: "#6b9e6b", marginBottom: 3 }}>

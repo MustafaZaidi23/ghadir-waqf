@@ -7,6 +7,7 @@ import { celoSepolia } from "@/lib/chain";
 import { useEffect } from "react";
 import { getTelegramWebApp } from "@/lib/telegram";
 import { LanguageProvider } from "@/lib/i18n";
+import { CountryProvider } from "@/lib/country";
 
 const queryClient = new QueryClient();
 
@@ -44,7 +45,9 @@ export function Providers({ children }: { children: React.ReactNode }) {
         <WagmiProvider config={wagmiConfig}>
           <TelegramInit />
           <LanguageProvider>
-            {children}
+            <CountryProvider>
+              {children}
+            </CountryProvider>
           </LanguageProvider>
         </WagmiProvider>
       </QueryClientProvider>

@@ -6,12 +6,12 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_KEY!
 );
 
+// Live countries available for selection / localization.
 export async function GET() {
   const { data, error } = await supabase
-    .from("charities")
-    .select("id, name, description, cause_category, country, country_code, wallet_address, funded_usd, target_usd")
-    .eq("verified", true)
-    .eq("active", true)
+    .from("countries")
+    .select("code, name, region, currency_code, currency_symbol, usd_fx_rate, default_locale")
+    .eq("status", "live")
     .order("name");
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
