@@ -247,8 +247,8 @@ export default function Home() {
       ))}
 
       {/* Balance card */}
-      <div style={{ background: "linear-gradient(135deg, #0A3A22 0%, #1A4A30 60%, #2D6A4F 100%)", borderRadius: 18, padding: "22px 20px", position: "relative", overflow: "hidden" }}>
-        <div style={{ position: "absolute", top: -50, right: -50, width: 150, height: 150, borderRadius: "50%", background: "rgba(201,168,76,0.07)", pointerEvents: "none" }} />
+      <div style={{ background: "linear-gradient(135deg, #0A3D2E 0%, #14503A 60%, #2F884F 100%)", borderRadius: 18, padding: "22px 20px", position: "relative", overflow: "hidden" }}>
+        <div style={{ position: "absolute", top: -50, right: -50, width: 150, height: 150, borderRadius: "50%", background: "rgba(212,175,55,0.08)", pointerEvents: "none" }} />
         {tgUser && (
           <div style={{ fontSize: 11, color: "rgba(255,255,255,0.35)", marginBottom: 8 }}>
             ✈️ {tgUser.first_name}{tgUser.username ? ` · @${tgUser.username}` : ""}
@@ -257,7 +257,7 @@ export default function Home() {
         <div style={{ fontSize: 10, color: "rgba(255,255,255,0.4)", textTransform: "uppercase", letterSpacing: ".08em", marginBottom: 4 }}>
           {t("balance_label")}
         </div>
-        <div style={{ fontFamily: "Georgia, serif", fontSize: "3rem", fontWeight: 500, color: "#E8D5A3", lineHeight: 1, transition: "all .3s" }}>
+        <div style={{ fontFamily: "'Cinzel', serif", fontSize: "3rem", fontWeight: 600, color: "#E8D5A3", lineHeight: 1, transition: "all .3s" }}>
           {displayGhdr.toLocaleString(undefined, { maximumFractionDigits: 0 })}
           {pending > 0 && (
             <span style={{ fontSize: "1rem", color: "#4ade80", marginLeft: 10, fontFamily: "sans-serif", fontWeight: 600 }}>
@@ -288,8 +288,8 @@ export default function Home() {
       {/* Active campaign banner */}
       {activeCampaign && (
         <div style={{
-          background: "linear-gradient(90deg, rgba(167,139,250,0.1), rgba(34,197,94,0.08))",
-          border: `1px solid ${campaignJoined ? "rgba(34,197,94,0.3)" : "rgba(167,139,250,0.25)"}`,
+          background: "linear-gradient(90deg, rgba(212,175,55,0.1), rgba(47,136,79,0.08))",
+          border: `1px solid ${campaignJoined ? "rgba(47,136,79,0.35)" : "rgba(212,175,55,0.3)"}`,
           borderRadius: 12, padding: "10px 14px",
         }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
@@ -299,7 +299,7 @@ export default function Home() {
                 <div style={{ fontSize: 12, fontWeight: 600, color: "#e8f5e8", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                   {activeCampaign.name}
                 </div>
-                <div style={{ fontSize: 10, color: campaignJoined ? "#22c55e" : "#a78bfa", marginTop: 1 }}>
+                <div style={{ fontSize: 10, color: campaignJoined ? "#52B788" : "#D4AF37", marginTop: 1 }}>
                   {campaignJoined ? "You're participating · keep going!" : "Active campaign · join to participate"}
                 </div>
               </div>
@@ -312,7 +312,7 @@ export default function Home() {
               <button
                 onClick={handleJoinCampaign}
                 disabled={campaignJoining}
-                style={{ fontSize: 11, padding: "4px 10px", borderRadius: 8, background: "rgba(167,139,250,0.12)", color: "#a78bfa", border: "1px solid rgba(167,139,250,0.25)", cursor: "pointer", fontWeight: 600, flexShrink: 0, opacity: campaignJoining ? 0.6 : 1 }}
+                style={{ fontSize: 11, padding: "4px 10px", borderRadius: 8, background: "rgba(212,175,55,0.14)", color: "#D4AF37", border: "1px solid rgba(212,175,55,0.3)", cursor: "pointer", fontWeight: 600, flexShrink: 0, opacity: campaignJoining ? 0.6 : 1 }}
               >
                 {campaignJoining ? "Joining…" : "Join →"}
               </button>

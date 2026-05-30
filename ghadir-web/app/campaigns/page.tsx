@@ -9,7 +9,7 @@ const T: Record<string, { icon: string; label: string; color: string; bg: string
   awareness:   { icon: "📢", label: "Awareness",     color: "#38bdf8", bg: "linear-gradient(135deg,#0c2233,#0f3347)" },
   fundraising: { icon: "💰", label: "Fundraising",   color: "#22c55e", bg: "linear-gradient(135deg,#0a2016,#0f3b1f)" },
   salawat:     { icon: "📿", label: "Salawat Drive", color: "#f59e0b", bg: "linear-gradient(135deg,#251a04,#3b2408)" },
-  special_day: { icon: "✨", label: "Special Day",   color: "#a78bfa", bg: "linear-gradient(135deg,#16093b,#241047)" },
+  special_day: { icon: "✨", label: "Special Day",   color: "#D4AF37", bg: "linear-gradient(135deg,#1c1605,#2b2208)" },
   ramadan:     { icon: "☽",  label: "Ramadan",       color: "#e8c87a", bg: "linear-gradient(135deg,#231d04,#332b08)" },
   other:       { icon: "📌", label: "Campaign",      color: "#94a3b8", bg: "linear-gradient(135deg,#111827,#1f2937)" },
 };
@@ -407,7 +407,7 @@ export default function CampaignsPage() {
       {/* Header */}
       <div style={{ marginBottom: 20 }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4 }}>
-          <h1 style={{ fontSize: 22, fontWeight: 700, color: "#e8f5e8", margin: 0 }}>Campaigns</h1>
+          <h1 style={{ fontFamily: "'Cinzel', serif", fontSize: 22, fontWeight: 700, color: "#D4AF37", margin: 0, letterSpacing: "0.04em" }}>Campaigns</h1>
           {active.length > 0 && (
             <span style={{ fontSize: 11, color: "#22c55e", background: "#22c55e15", border: "1px solid #22c55e30", borderRadius: 20, padding: "2px 10px", fontWeight: 600, display: "flex", alignItems: "center", gap: 5 }}>
               <span style={{ width: 5, height: 5, borderRadius: "50%", background: "#22c55e", display: "inline-block", animation: "livePulse 2s infinite" }} />

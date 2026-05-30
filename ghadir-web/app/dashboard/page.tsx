@@ -133,7 +133,7 @@ export default function Dashboard() {
   return (
     <div className="space-y-8">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-[#e8f5e8]">{t("your_profile")}</h1>
+        <h1 style={{ fontFamily: "'Cinzel', serif", letterSpacing: "0.04em" }} className="text-2xl font-bold text-[#D4AF37]">{t("your_profile")}</h1>
         {tgUser && (
           <div className="flex items-center gap-2 text-sm text-[#6b9e6b]">
             <span>✈️</span>
@@ -148,11 +148,11 @@ export default function Dashboard() {
       {/* Stats row */}
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
         <div className="card text-center">
-          <div className="text-3xl font-bold text-[#22c55e]">{ghdr}</div>
+          <div style={{ fontFamily: "'Cinzel', serif" }} className="text-3xl font-bold text-[#E8D5A3]">{ghdr}</div>
           <div className="text-[#6b9e6b] text-sm mt-1">{t("ghdr_balance")}</div>
         </div>
         <div className="card text-center">
-          <div className="text-3xl font-bold text-[#f59e0b]">{lifetimeCount}</div>
+          <div className="text-3xl font-bold text-[#D4AF37]">{lifetimeCount}</div>
           <div className="text-[#6b9e6b] text-sm mt-1">{t("lifetime_salawat")}</div>
         </div>
         <div className="card text-center col-span-2 sm:col-span-1">

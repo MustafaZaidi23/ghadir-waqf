@@ -152,11 +152,11 @@ export default function Redeem() {
 
   return (
     <div className="space-y-8 max-w-2xl mx-auto">
-      <h1 className="text-2xl font-bold text-[#e8f5e8]">Redeem Hadiya</h1>
+      <h1 style={{ fontFamily: "'Cinzel', serif", letterSpacing: "0.04em" }} className="text-2xl font-bold text-[#D4AF37]">Redeem Hadiya</h1>
 
       <div className="card flex justify-between items-center">
         <span className="text-[#6b9e6b] text-sm">Your balance</span>
-        <span className="text-[#22c55e] font-bold text-lg">{ghdr} GHDR</span>
+        <span className="text-[#D4AF37] font-bold text-lg">{ghdr} GHDR</span>
       </div>
 
       {/* Campaign banner */}

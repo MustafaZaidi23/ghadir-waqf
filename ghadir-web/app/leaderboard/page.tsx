@@ -37,7 +37,7 @@ export default function Leaderboard() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-2xl font-bold text-[#e8f5e8]">Leaderboard</h1>
+        <h1 style={{ fontFamily: "'Cinzel', serif", letterSpacing: "0.04em" }} className="text-2xl font-bold text-[#D4AF37]">Leaderboard</h1>
         <p className="text-[#6b9e6b] text-sm mt-1">Top Salawat senders in the Ghadir community</p>
       </div>
 
@@ -74,10 +74,10 @@ export default function Leaderboard() {
                     {i < 3 ? medals[i] : <span className="text-[#6b9e6b]">{i + 1}</span>}
                   </td>
                   <td className="px-4 py-3 text-[#e8f5e8] font-medium">{displayName(e)}</td>
-                  <td className="px-4 py-3 text-right text-[#f59e0b] font-bold">
+                  <td className="px-4 py-3 text-right text-[#D4AF37] font-bold">
                     {Number(e.total_salawat).toLocaleString()}
                   </td>
-                  <td className="px-4 py-3 text-right text-[#22c55e] hidden sm:table-cell">
+                  <td className="px-4 py-3 text-right text-[#52B788] hidden sm:table-cell">
                     {Number(e.total_tokens).toLocaleString()} GHDR
                   </td>
                   <td className="px-4 py-3 text-right text-[#6b9e6b] font-mono text-xs hidden md:table-cell">
