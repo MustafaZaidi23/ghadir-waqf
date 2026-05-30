@@ -152,7 +152,7 @@ export function Nav() {
                       border: `1px solid ${active ? "rgba(212,175,55,0.3)" : "transparent"}`,
                       transition: "background .12s",
                     }}>
-                    <span style={{ fontSize: 18, width: 24, textAlign: "center" }}>{item.icon}</span>
+                    <span aria-hidden="true" style={{ fontSize: 18, width: 24, textAlign: "center" }}>{item.icon}</span>
                     <span style={{
                       fontSize: 13, fontFamily: "'Inter', sans-serif",
                       fontWeight: active ? 600 : 400,
@@ -160,7 +160,7 @@ export function Nav() {
                     }}>
                       {t(item.key)}
                     </span>
-                    {active && <span style={{ marginLeft: "auto", width: 6, height: 6, borderRadius: "50%", background: "#22c55e", flexShrink: 0 }} />}
+                    {active && <span aria-hidden="true" style={{ marginLeft: "auto", width: 6, height: 6, borderRadius: "50%", background: "#D4AF37", flexShrink: 0 }} />}
                   </Link>
                 );
               })}
@@ -170,7 +170,7 @@ export function Nav() {
             <div style={{ borderTop: "1px solid rgba(212,175,55,0.15)", paddingTop: 10, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
               {address ? (
                 <>
-                  <span style={{ fontSize: 11, color: "#374151", fontFamily: "monospace" }}>
+                  <span style={{ fontSize: 11, color: "#6b9e6b", fontFamily: "monospace" }}>
                     {address.slice(0, 8)}…{address.slice(-6)}
                   </span>
                   <button onClick={() => { logout(); setOpen(false); }}

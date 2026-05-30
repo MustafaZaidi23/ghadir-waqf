@@ -127,4 +127,19 @@ h1, h2, h3,
   font-family: 'Inter', sans-serif;
 }
 .input:focus { outline: none; border-color: var(--heritage-green); }
+.input:focus-visible { outline: 2px solid var(--heritage-green); outline-offset: 1px; }
 select.input option { background: var(--green-mid); color: #e8f0e8; }
+
+/* ── Keyboard focus visibility (a11y) ───────────────────────────────────── */
+a:focus-visible,
+button:focus-visible,
+[role="button"]:focus-visible,
+summary:focus-visible {
+  outline: 2px solid var(--divine-gold);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+/* Show the ring for keyboard only, not mouse/touch */
+a:focus:not(:focus-visible),
+button:focus:not(:focus-visible),
+summary:focus:not(:focus-visible) { outline: none; }

@@ -308,14 +308,14 @@ function CampaignCard({ c, address, joinedIds, joiningId, onJoin }: {
         )}
 
         {(c.participants ?? 0) > 0 && (
-          <div style={{ fontSize: 11, color: "#374151" }}>
-            <span style={{ color: done ? "#374151" : t.color, fontWeight: 600 }}>👥 {c.participants!.toLocaleString()}</span> participants
+          <div style={{ fontSize: 11, color: "#6b9e6b" }}>
+            <span style={{ color: done ? "#6b9e6b" : t.color, fontWeight: 600 }}><span aria-hidden="true">👥 </span>{c.participants!.toLocaleString()}</span> participants
           </div>
         )}
 
         {/* Footer */}
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "auto", gap: 8, flexWrap: "wrap" as const }}>
-          <div style={{ fontSize: 11, color: "#374151", display: "flex", gap: 8 }}>
+          <div style={{ fontSize: 11, color: "#6b9e6b", display: "flex", gap: 8 }}>
             {c.platform && <span>{PLATFORM_ICONS[c.platform] ?? "🔗"} {c.platform}</span>}
             {!done && dl !== null && dl > 3 && <span style={{ color: "#6b9e6b" }}>{dl}d left</span>}
             {done && c.end_date && <span>Ended {c.end_date}</span>}

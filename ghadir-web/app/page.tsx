@@ -222,7 +222,7 @@ export default function Home() {
           </p>
         )}
         <button onClick={login} className="btn-primary px-10 py-3 text-base">
-          Get Started
+          {t("sign_in")}
         </button>
       </div>
     );
@@ -405,7 +405,7 @@ export default function Home() {
           { href: "/dashboard",   icon: "📊", title: t("your_profile"),   sub: t("salawat_history") },
         ].map((q) => (
           <Link key={q.href} href={q.href} style={{ background: "#111a11", border: "0.5px solid #1e3a1e", borderRadius: 14, padding: "16px 14px", textDecoration: "none", display: "block" }}>
-            <div style={{ fontSize: 22, marginBottom: 6 }}>{q.icon}</div>
+            <div aria-hidden="true" style={{ fontSize: 22, marginBottom: 6 }}>{q.icon}</div>
             <div style={{ fontSize: 13, fontWeight: 500, color: "#e8f5e8" }}>{q.title}</div>
             <div style={{ fontSize: 10, color: "#6b9e6b", marginTop: 3 }}>{q.sub}</div>
           </Link>
@@ -442,7 +442,7 @@ export default function Home() {
                     {log.status}
                   </span>
                   {log.tx_hash && (
-                    <a href={`${EXPLORER}/tx/${log.tx_hash}`} target="_blank" rel="noopener noreferrer" style={{ fontSize: 10, color: "#22c55e", textDecoration: "none" }}>↗</a>
+                    <a href={`${EXPLORER}/tx/${log.tx_hash}`} target="_blank" rel="noopener noreferrer" aria-label="View transaction on block explorer" style={{ fontSize: 10, color: "#22c55e", textDecoration: "none" }}>↗</a>
                   )}
                 </div>
               </div>

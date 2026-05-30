@@ -227,8 +227,8 @@ export default function Dashboard() {
                       )}
                       {/* participants */}
                       {(c.participants ?? 0) > 0 && (
-                        <div style={{ fontSize: 10, color: "#374151", marginBottom: 8 }}>
-                          👥 <span style={{ color: done ? "#374151" : color, fontWeight: 600 }}>{c.participants!.toLocaleString()}</span> joined
+                        <div style={{ fontSize: 10, color: "#6b9e6b", marginBottom: 8 }}>
+                          <span aria-hidden="true">👥 </span><span style={{ color: done ? "#6b9e6b" : color, fontWeight: 600 }}>{c.participants!.toLocaleString()}</span> joined
                         </div>
                       )}
                       {/* CTA */}
