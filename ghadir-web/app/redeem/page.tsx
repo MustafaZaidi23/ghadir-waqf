@@ -30,8 +30,8 @@ export default function Redeem() {
   const [amount, setAmount] = useState("");
   const [step, setStep] = useState<"idle" | "approving" | "redeeming" | "done">("idle");
   const [linkedCampaign, setLinkedCampaign] = useState<Campaign | null>(null);
-  const [profile, setProfile] = useState<{ username: string | null; first_name: string | null } | null>(null);
-  const profileLabel = profile?.username ? `@${profile.username}` : profile?.first_name ?? null;
+  const [profile, setProfile] = useState<{ username: string | null; display_name: string | null; first_name: string | null } | null>(null);
+  const profileLabel = profile?.username ? `@${profile.username}` : profile?.display_name ?? profile?.first_name ?? null;
 
   const { data: balance } = useReadContract({
     address: SALAWAT_TOKEN, abi: SALAWAT_ABI,

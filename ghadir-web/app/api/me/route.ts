@@ -14,12 +14,13 @@ export async function GET(req: NextRequest) {
 
   const { data } = await supabase
     .from("users")
-    .select("username, first_name")
+    .select("username, display_name, first_name")
     .eq("wallet_address", wallet.toLowerCase())
     .single();
 
   return NextResponse.json({
     username: data?.username ?? null,
+    display_name: data?.display_name ?? null,
     first_name: data?.first_name ?? null,
   });
 }

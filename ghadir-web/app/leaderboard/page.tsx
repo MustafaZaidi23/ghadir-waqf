@@ -5,6 +5,7 @@ import { useLanguage } from "@/lib/i18n";
 
 interface LeaderEntry {
   username: string | null;
+  display_name: string | null;
   first_name: string | null;
   wallet_address: string | null;
   total_salawat: number;
@@ -27,6 +28,8 @@ export default function Leaderboard() {
   const displayName = (e: LeaderEntry) =>
     e.username
       ? `@${e.username}`
+      : e.display_name
+      ? e.display_name
       : e.first_name
       ? e.first_name
       : e.wallet_address
@@ -39,7 +42,7 @@ export default function Leaderboard() {
   // Short wallet to show *beneath* the name — only when the name isn't already
   // the wallet itself (i.e. the entry has a username or first name).
   const subWallet = (e: LeaderEntry) =>
-    (e.username || e.first_name) && e.wallet_address ? shortWallet(e.wallet_address) : "";
+    (e.username || e.display_name || e.first_name) && e.wallet_address ? shortWallet(e.wallet_address) : "";
 
   const isMe = (e: LeaderEntry) =>
     !!address && !!e.wallet_address && e.wallet_address.toLowerCase() === address.toLowerCase();

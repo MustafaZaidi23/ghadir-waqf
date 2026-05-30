@@ -9,14 +9,14 @@ const supabase = createClient(
 export async function GET() {
   const { data, error } = await supabase
     .from("salawat_logs")
-    .select("count, tokens_earned, users(username, first_name, wallet_address)")
+    .select("count, tokens_earned, users(username, display_name, first_name, wallet_address)")
     .eq("status", "confirmed")
     .order("count", { ascending: false });
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
   // Aggregate by user
-  const map = new Map<string, { username: string | null; first_name: string | null; wallet_address: string | null; total_salawat: number; total_tokens: number }>();
+  const map = new Map<string, { username: string | null; display_name: string | null; first_name: string | null; wallet_address: string | null; total_salawat: number; total_tokens: number }>();
 
   for (const row of data ?? []) {
     const user = Array.isArray(row.users) ? row.users[0] : row.users as any;
@@ -29,6 +29,7 @@ export async function GET() {
     } else {
       map.set(key, {
         username: user.username,
+        display_name: user.display_name,
         first_name: user.first_name,
         wallet_address: user.wallet_address,
         total_salawat: row.count,

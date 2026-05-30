@@ -1,5 +1,5 @@
 "use client";
-import { useAccount, useReadContract } from "wagmi";
+import { useAccount, useReadContract, useSignMessage } from "wagmi";
 import { usePrivy } from "@privy-io/react-auth";
 import { formatUnits } from "viem";
 import { SALAWAT_TOKEN, SALAWAT_ABI, EXPLORER } from "@/lib/contracts";
@@ -39,15 +39,52 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(false);
   const [linkStatus, setLinkStatus] = useState<"idle" | "linking" | "linked" | "error">("idle");
   const [myCampaigns, setMyCampaigns] = useState<Campaign[]>([]);
-  const [profile, setProfile] = useState<{ username: string | null; first_name: string | null } | null>(null);
+  const [profile, setProfile] = useState<{ username: string | null; display_name: string | null; first_name: string | null } | null>(null);
+  const [editingName, setEditingName] = useState(false);
+  const [nameInput, setNameInput] = useState("");
+  const [nameSaving, setNameSaving] = useState<"idle" | "signing" | "saving">("idle");
+  const [nameError, setNameError] = useState<string | null>(null);
+  const { signMessageAsync } = useSignMessage();
 
   const tgUser = getTelegramUser();
   const inTelegram = isInTelegram();
 
-  // Prefer the live Telegram identity, fall back to the linked DB profile
+  // Prefer the live Telegram identity, then linked @handle, then self-set name
   const handle = tgUser?.username ?? profile?.username ?? null;
   const fname = tgUser?.first_name ?? profile?.first_name ?? null;
-  const profileLabel = handle ? `@${handle}` : fname;
+  const profileLabel = handle ? `@${handle}` : profile?.display_name ?? fname;
+  // A self-set display name only makes sense when there's no verified @handle
+  const canSetDisplayName = !handle;
+
+  async function saveDisplayName() {
+    if (!address) return;
+    const name = nameInput.trim();
+    if (name.length < 2 || name.length > 20) {
+      setNameError(t("display_name_help"));
+      return;
+    }
+    setNameError(null);
+    try {
+      const timestamp = Date.now();
+      const message = `Ghadir Waqf — set display name\nName: ${name}\nWallet: ${address.toLowerCase()}\nTime: ${timestamp}`;
+      setNameSaving("signing");
+      const signature = await signMessageAsync({ message });
+      setNameSaving("saving");
+      const res = await fetch("/api/profile", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ wallet_address: address, display_name: name, timestamp, signature }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "Failed to save");
+      setProfile((p) => ({ username: p?.username ?? null, first_name: p?.first_name ?? null, display_name: data.display_name }));
+      setEditingName(false);
+    } catch (e) {
+      setNameError(e instanceof Error ? e.message : "Failed to save");
+    } finally {
+      setNameSaving("idle");
+    }
+  }
 
   const { data: balance } = useReadContract({
     address: SALAWAT_TOKEN,
@@ -338,6 +375,54 @@ export default function Dashboard() {
             <p className="text-[#6b9e6b] text-xs font-mono truncate mt-0.5">{address}</p>
           </div>
         </div>
+
+        {/* Display name row — for web users without a verified Telegram @handle */}
+        {address && canSetDisplayName && (
+          <div className="px-4 py-3 border-b border-[#1e3a1e]">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-lg bg-[#0d2b16] flex items-center justify-center text-sm flex-shrink-0" aria-hidden="true">🏷️</div>
+              <div className="flex-1 min-w-0">
+                <p className="text-xs text-[#6b9e6b]">{t("display_name")}</p>
+                {!editingName && (
+                  <p className="text-sm mt-0.5 truncate">
+                    {profile?.display_name
+                      ? <span className="text-[#e8f5e8]">{profile.display_name}</span>
+                      : <span className="text-[#6b9e6b]">{t("set_display_name")}</span>}
+                  </p>
+                )}
+              </div>
+              {!editingName && (
+                <button
+                  onClick={() => { setNameInput(profile?.display_name ?? ""); setNameError(null); setEditingName(true); }}
+                  aria-label={t("display_name")}
+                  className="text-[#D4AF37] hover:opacity-80 flex-shrink-0 text-sm"
+                >✎</button>
+              )}
+            </div>
+            {editingName && (
+              <div className="mt-3 space-y-2">
+                <input
+                  className="input w-full text-sm"
+                  value={nameInput}
+                  onChange={(e) => setNameInput(e.target.value)}
+                  maxLength={20}
+                  placeholder={t("display_name")}
+                  autoFocus
+                />
+                <p className="text-[10px] text-[#6b9e6b]">{t("display_name_help")}</p>
+                {nameError && <p className="text-[10px] text-[#f87171]">{nameError}</p>}
+                <div className="flex gap-2">
+                  <button onClick={saveDisplayName} disabled={nameSaving !== "idle"} className="btn-primary text-sm px-4 py-1.5 disabled:opacity-50">
+                    {nameSaving === "signing" ? t("sign_to_save") : nameSaving === "saving" ? t("saving") : t("save")}
+                  </button>
+                  <button onClick={() => { setEditingName(false); setNameError(null); }} disabled={nameSaving !== "idle"} className="text-sm px-4 py-1.5 text-[#6b9e6b] hover:text-[#e8f5e8] disabled:opacity-50">
+                    {t("cancel")}
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Language row — expands inline */}
         <details className="group border-b border-[#1e3a1e]">

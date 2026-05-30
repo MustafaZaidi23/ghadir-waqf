@@ -11,11 +11,15 @@ create table if not exists users (
   id            uuid primary key default gen_random_uuid(),
   telegram_id   text,
   wallet_address text,
-  username      text,
+  username      text,        -- verified Telegram @handle (from link-wallet)
+  display_name  text,        -- self-chosen nickname for pure-web users
   first_name    text,
   created_at    timestamptz not null default now(),
   updated_at    timestamptz not null default now()
 );
+
+-- If the table already exists, add the self-chosen nickname column:
+alter table users add column if not exists display_name text;
 
 -- ─── salawat_logs ───────────────────────────────────────────────────────────
 create table if not exists salawat_logs (
