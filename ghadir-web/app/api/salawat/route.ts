@@ -34,6 +34,9 @@ function verifyInitData(initData: string): boolean {
   const params = new URLSearchParams(initData);
   const hash = params.get("hash");
   if (!hash) return false;
+  // Reject stale initData (replay protection) — must be < 24h old
+  const authDate = Number(params.get("auth_date") ?? 0);
+  if (!authDate || Date.now() / 1000 - authDate > 86400) return false;
   params.delete("hash");
   const str = [...params.entries()].sort(([a], [b]) => a.localeCompare(b)).map(([k, v]) => `${k}=${v}`).join("\n");
   const secret = crypto.createHmac("sha256", "WebAppData").update(BOT_TOKEN).digest();
@@ -68,12 +71,12 @@ export async function POST(req: NextRequest) {
         { status: 400 }
       );
     }
-    walletAddress = user.wallet_address;
+    walletAddress = user.wallet_address.toLowerCase();
   } else if (body.wallet_address) {
     if (!/^0x[0-9a-fA-F]{40}$/.test(body.wallet_address)) {
       return NextResponse.json({ error: "Invalid wallet address" }, { status: 400 });
     }
-    walletAddress = body.wallet_address;
+    walletAddress = body.wallet_address.toLowerCase();
     // Auto-create user record so this wallet appears on the leaderboard
     const { data: existing } = await supabase
       .from("users")

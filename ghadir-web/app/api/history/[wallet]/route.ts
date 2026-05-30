@@ -16,7 +16,7 @@ export async function GET(
   const { data: user } = await supabase
     .from("users")
     .select("id")
-    .eq("wallet_address", wallet)
+    .eq("wallet_address", wallet.toLowerCase())
     .single();
 
   if (!user) return NextResponse.json([]);

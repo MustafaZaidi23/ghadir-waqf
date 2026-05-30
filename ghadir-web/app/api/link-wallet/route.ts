@@ -14,6 +14,9 @@ function verifyInitData(initData: string): boolean {
   const params = new URLSearchParams(initData);
   const hash = params.get("hash");
   if (!hash) return false;
+  // Reject stale initData (replay protection) — must be < 24h old
+  const authDate = Number(params.get("auth_date") ?? 0);
+  if (!authDate || Date.now() / 1000 - authDate > 86400) return false;
   params.delete("hash");
 
   const dataCheckString = [...params.entries()]
@@ -71,7 +74,7 @@ export async function POST(req: NextRequest) {
   const { error } = await supabase.from("users").upsert(
     {
       telegram_id: telegramId,
-      wallet_address,
+      wallet_address: wallet_address.toLowerCase(),
       username: tgUser.username,
       first_name: tgUser.first_name,
       updated_at: new Date().toISOString(),

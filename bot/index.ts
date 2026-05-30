@@ -141,12 +141,13 @@ bot.command("wallet", async (ctx) => {
     return;
   }
 
+  const normalized = address.toLowerCase();
   await supabase
     .from("users")
-    .update({ wallet_address: address, updated_at: new Date().toISOString() })
+    .update({ wallet_address: normalized, updated_at: new Date().toISOString() })
     .eq("telegram_id", telegramId);
 
-  await ctx.reply(`✅ Wallet linked:\n${address}`);
+  await ctx.reply(`✅ Wallet linked:\n${normalized}`);
 });
 
 // /salawat ────────────────────────────────────────────────────────────────────
