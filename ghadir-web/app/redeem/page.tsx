@@ -74,6 +74,15 @@ export default function Redeem() {
     if (match) setSelected(match);
   }, [linkedCampaign, charities, selected]);
 
+  // Pre-select charity from a ?charity=<id> deep link (bot /redeem → charity tap)
+  useEffect(() => {
+    if (charities.length === 0 || selected) return;
+    const id = new URLSearchParams(window.location.search).get("charity");
+    if (!id) return;
+    const match = charities.find(c => c.id === id);
+    if (match) setSelected(match);
+  }, [charities, selected]);
+
   useEffect(() => {
     if (txConfirmed) {
       if (step === "approving") {

@@ -332,7 +332,7 @@ bot.callbackQuery(/^charity:(.+)$/, async (ctx) => {
     {
       reply_markup: new InlineKeyboard().webApp(
         `💚 Donate to ${c.name}`,
-        `${APP_URL}/redeem`
+        `${APP_URL}/redeem?charity=${c.id}`
       ),
     }
   );

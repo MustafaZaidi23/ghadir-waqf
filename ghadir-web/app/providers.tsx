@@ -16,6 +16,9 @@ function TelegramInit() {
     if (twa) {
       twa.ready();
       twa.expand();
+      // Match the Mini App chrome to the brand (Ghadir Green) for a native feel
+      twa.setHeaderColor?.("#0A3D2E");
+      twa.setBackgroundColor?.("#071f17");
     }
   }, []);
   return null;
